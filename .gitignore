@@ -1,7 +1,5 @@
 .bitwarden
-.claude
 .mise.local.toml
-.temp
 .terraform
 *.tfplan
 *.tfstate
