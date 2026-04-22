@@ -4,9 +4,9 @@ deploy_to:
 features:
   password: true
   secrets:
-    - length: 32
+    - length: 24
       name: db_password
-      type: base64
+      type: alphanumeric
 identity:
   description: Password Manager
   name: vaultwarden

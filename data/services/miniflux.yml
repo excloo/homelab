@@ -6,9 +6,12 @@ features:
   secrets:
     - length: 32
       name: db_password
-      type: base64
+      type: alphanumeric
+    - length: 64
+      name: homepage_widget_key
+      type: alphanumeric
 identity:
-  description: RSS Feed Reader
+  description: RSS Reader
   name: miniflux
   title: Miniflux
 networking:
@@ -20,7 +23,10 @@ platform_config:
       BASE_URL: "https://${service.fqdn_internal}"
     labels:
       homepage.description: "${service.identity.description}"
-      homepage.group: Productivity
+      homepage.group: Applications
       homepage.href: "https://${service.fqdn_internal}"
       homepage.icon: "${service.identity.name}"
       homepage.name: "${service.identity.title}"
+      homepage.widget.key: "${service.homepage_widget_key_sensitive}"
+      homepage.widget.type: miniflux
+      homepage.widget.url: "https://${service.fqdn_internal}"

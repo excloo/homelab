@@ -6,13 +6,16 @@ features:
   secrets:
     - length: 32
       name: db_password
-      type: base64
+      type: alphanumeric
+    - length: 197
+      name: homepage_widget_key
+      type: string
     - length: 32
       name: meilisearch_master_key
-      type: base64
+      type: alphanumeric
     - length: 32
       name: nextauth_secret
-      type: base64
+      type: alphanumeric
 identity:
   description: Bookmark and Web Archive Manager
   name: linkwarden
@@ -28,3 +31,6 @@ platform_config:
       homepage.href: "https://${service.fqdn_internal}"
       homepage.icon: "${service.identity.name}"
       homepage.name: "${service.identity.title}"
+      homepage.widget.key: "${service.homepage_widget_key_sensitive}"
+      homepage.widget.type: linkwarden
+      homepage.widget.url: "https://${service.fqdn_internal}"
