@@ -127,8 +127,8 @@ services:
       cpu_kind: shared
       cpus: 1
       image: null
+      machine_count: 1
       memory_mb: 256
-      min_machines_running: 1
       region: syd
     truenas:
       catalog_app: null

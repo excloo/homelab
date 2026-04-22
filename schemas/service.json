@@ -178,15 +178,15 @@
               "type": ["string", "null"],
               "description": "Pre-built Docker image to deploy (e.g. 'ghcr.io/owner/image:tag'). If null, a Dockerfile in the service's template directory is used instead."
             },
+            "machine_count": {
+              "type": ["integer", "null"],
+              "minimum": 1,
+              "description": "Desired number of Fly Machines for this app. Null leaves the existing machine count unchanged."
+            },
             "memory_mb": {
               "type": "integer",
               "minimum": 1,
               "description": "RAM in MiB to allocate to each machine."
-            },
-            "min_machines_running": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "Minimum number of machines to keep running at all times. Set to 0 to allow scale-to-zero."
             },
             "region": {
               "type": "string",

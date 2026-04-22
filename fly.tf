@@ -11,7 +11,7 @@ locals {
     {
       for k, v in local.fly_input_services : "${v.platform_config.fly.app_name}/fly.toml" => {
         age_public_key = age_secret_key.fly.public_key
-        commit_message = "Update ${v.platform_config.fly.app_name} Fly configuration"
+        commit_message = "Update ${v.platform_config.fly.app_name} configuration"
         content_base64 = sensitive(base64encode(templatefile("${path.module}/templates/fly/fly.toml.tftpl", local.services_render_vars[k])))
         content_type   = "binary"
         file           = "${v.platform_config.fly.app_name}/fly.toml"
@@ -26,6 +26,16 @@ locals {
         file           = "${v.platform_config.fly.app_name}/.certs"
       }
       if length(v.networking.urls) > 0
+    },
+    {
+      for k, v in local.fly_input_services : "${v.platform_config.fly.app_name}/.machine-count" => {
+        age_public_key = age_secret_key.fly.public_key
+        commit_message = "Update ${v.platform_config.fly.app_name} machine count"
+        content_base64 = base64encode("${v.platform_config.fly.machine_count}\n")
+        content_type   = "binary"
+        file           = "${v.platform_config.fly.app_name}/.machine-count"
+      }
+      if v.platform_config.fly.machine_count != null
     },
     {
       for k, v in local.services_rendered_files : "${local.fly_input_services[v.stack].platform_config.fly.app_name}/${v.rel_path}" => merge(v, {
