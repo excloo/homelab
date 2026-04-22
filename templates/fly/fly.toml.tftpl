@@ -11,7 +11,6 @@ dockerfile = "Dockerfile"
 [http_service]
 force_https = ${service.networking.ssl}
 internal_port = ${service.networking.port}
-min_machines_running = ${service.platform_config.fly.min_machines_running}
 
 [[vm]]
 cpu_kind = "${service.platform_config.fly.cpu_kind}"
