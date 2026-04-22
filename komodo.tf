@@ -38,8 +38,8 @@ resource "github_repository_file" "komodo_resource_sync" {
   repository          = local.defaults.github.repositories.komodo
 
   content = templatefile("${path.module}/templates/komodo/resource_sync.toml.tftpl", {
-    github_user = data.github_user.default.login
-    repository  = local.defaults.github.repositories.komodo
+    owner      = local.defaults.github.owner
+    repository = local.defaults.github.repositories.komodo
   })
 }
 
@@ -75,9 +75,9 @@ resource "github_repository_file" "komodo_stacks" {
   repository          = local.defaults.github.repositories.komodo
 
   content = templatefile("${path.module}/templates/komodo/stacks.toml.tftpl", {
-    github_user = data.github_user.default.login
-    repository  = local.defaults.github.repositories.komodo
-    stacks      = local.komodo_input_stacks
+    owner      = local.defaults.github.owner
+    repository = local.defaults.github.repositories.komodo
+    stacks     = local.komodo_input_stacks
   })
 }
 
