@@ -1,10 +1,13 @@
 # yaml-language-server: $schema=../../schemas/service.json
 deploy_to:
   - au-truenas
+features:
+  password: true
 identity:
   description: File Synchronization
   name: syncthing
   title: Syncthing
+  username: max@excloo.com
 networking:
   port: 20910
   scheme: http

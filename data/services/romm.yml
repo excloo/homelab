@@ -31,7 +31,7 @@ identity:
   title: RoMM
   username: max@excloo.com
 networking:
-  port: 8080
+  port: 30061
   scheme: http
 platform_config:
   docker:
