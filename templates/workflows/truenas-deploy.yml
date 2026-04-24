@@ -21,7 +21,7 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Check Changed Files
@@ -61,7 +61,7 @@ jobs:
     if: needs.changed-files.outputs.matrix != '[]'
     name: Deploy
     needs: [changed-files]
-    runs-on: [self-hosted, "${{ matrix.target.server }}-privileged"]
+    runs-on: [self-hosted, "${{ matrix.target.server }}-privilaged"]
     concurrency:
       cancel-in-progress: true
       group: deploy-${{ matrix.target.server }}
@@ -82,7 +82,7 @@ jobs:
       - name: Setup sops
         uses: nhedger/setup-sops@v2
       - name: Setup uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v8.1.0
       - name: Setup midclt
         run: uv tool install git+https://github.com/truenas/api_client.git
       - name: Decrypt Files
