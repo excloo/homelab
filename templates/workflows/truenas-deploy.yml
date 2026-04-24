@@ -64,7 +64,7 @@ jobs:
     runs-on: [self-hosted, "${{ matrix.target.server }}-privileged"]
     concurrency:
       cancel-in-progress: true
-      group: deploy-${{ matrix.target.server }}
+      group: deploy-${{ matrix.target.server }}-${{ matrix.target.service }}
     defaults:
       run:
         working-directory: ${{ matrix.target.path }}
