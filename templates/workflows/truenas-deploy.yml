@@ -84,7 +84,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v8.1.0
       - name: Setup midclt
-        run: uv tool install git+https://github.com/truenas/api_client.git
+        run: uv tool install --python 3.12 git+https://github.com/truenas/api_client.git
       - name: Decrypt Files
         run: find . -type f | xargs grep -l 'BEGIN AGE ENCRYPTED FILE' | xargs -r sops --decrypt --in-place
       - name: Deploy Custom Services
