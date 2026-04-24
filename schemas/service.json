@@ -18,12 +18,20 @@
     },
     "features": {
       "type": "object",
-      "description": "Feature flags that provision additional resources for this service instance.",
+      "description": "Feature flags that provision resources, expose template values, or control generated config for this service instance.",
       "additionalProperties": false,
       "properties": {
         "b2": {
           "type": "boolean",
           "description": "Provision a Backblaze B2 bucket and application key for this service. Exposes b2_bucket_name, b2_application_key_id, b2_application_key_sensitive, and b2_endpoint as template variables."
+        },
+        "monitoring": {
+          "type": "boolean",
+          "description": "Include this service in generated monitoring configuration. Does not provision resources or expose template variables."
+        },
+        "monitoring_alerts": {
+          "type": "boolean",
+          "description": "Attach generated monitoring alerts to this service when monitoring is enabled. Does not provision resources or expose template variables."
         },
         "password": {
           "type": "boolean",

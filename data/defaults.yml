@@ -101,11 +101,13 @@ services:
   deploy_to: []
   features:
     b2: false
+    monitoring: true
+    monitoring_alerts: true
     password: false
     pushover: false
     resend: false
-    tailscale: false
     secrets: []
+    tailscale: false
   identity:
     description: ""
     name: ""

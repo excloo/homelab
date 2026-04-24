@@ -7,7 +7,7 @@ Homelab infrastructure managed with OpenTofu (1.10+). YAML files in `data/` are 
 - `data/defaults.yml` — global config and schema defaults for servers/services
 - `data/servers/*.yml` — one file per server; deepmerged with server defaults in `servers.tf`
 - `data/services/*.yml` — one file per service; deepmerged with service defaults in `services.tf`; expanded per `deploy_to` target (e.g. `gatus-fly`)
-- `templates/` — HCL template files for cloud-init configs (`cloud_config/`) and Fly.io configs (`fly/`)
+- `templates/` — HCL template files for cloud-init configs, deployment workflows, platform configs, and shared render helpers
 - `services/<identity.name>/` — Docker Compose templates and per-service config files (e.g. `docker-compose.yaml.tftpl`, `app/config/*.yaml.tftpl`)
 
 Key computed locals:
@@ -40,6 +40,7 @@ This applies consistently to `data/` YAML files, `schemas/*.json` property lists
 
 ### Feature flags
 
+- `monitoring` and `monitoring_alerts` are local-only render controls for generated Gatus checks and alerts.
 - `password` is local-only and exposes generated `_sensitive` values.
 - Provider-backed feature flags create or read remote resources when enabled, such as `b2`, `resend`, and `tailscale`.
 - Some APIs use `TF_VAR_*` values because there is no native provider in use here, such as Resend through the generic REST API provider.
@@ -67,7 +68,7 @@ services_model_desired            desired data without generated secrets
 services_model_runtime            generated secrets and provider-backed fields
 services_output_by_feature        filtered subsets keyed by feature flag
 services_output_private           merged private view for runtime consumers
-services_output_public            template-safe inventory without labels
+services_output_public            template-safe inventory with non-sensitive feature flags, without labels
 services_output_vars              base template context for label/env rendering
 services_render_labels            merged routing and service-owned labels
 services_render_vars              full template context with environment values

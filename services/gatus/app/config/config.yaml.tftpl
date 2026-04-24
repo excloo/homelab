@@ -39,14 +39,17 @@ endpoints:
     url: "icmp://${server.fqdn_internal}"
 %{ endfor ~}
 %{ for k, svc in services ~}
-%{ if svc.networking.scheme != null ~}
+%{ if svc.features.monitoring && svc.networking.scheme != null ~}
 %{ for url in svc.networking.urls ~}
-  - alerts:
+  -
+%{ if svc.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
+    alerts:
 %{ if service.features.resend ~}
       - type: email
 %{ endif ~}
 %{ if service.features.pushover ~}
       - type: pushover
+%{ endif ~}
 %{ endif ~}
 %{ if svc.networking.ssl_validation == false ~}
     client:
@@ -63,12 +66,15 @@ endpoints:
     url: "${svc.networking.ssl ? "https" : "http"}://${url}"
 %{ endfor ~}
 %{ if svc.fqdn_external != null ~}
-  - alerts:
+  -
+%{ if svc.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
+    alerts:
 %{ if service.features.resend ~}
       - type: email
 %{ endif ~}
 %{ if service.features.pushover ~}
       - type: pushover
+%{ endif ~}
 %{ endif ~}
 %{ if svc.networking.ssl_validation == false ~}
     client:
@@ -85,12 +91,15 @@ endpoints:
     url: "${svc.networking.ssl ? "https" : "http"}://${svc.fqdn_external}"
 %{ endif ~}
 %{ if svc.fqdn_internal != null ~}
-  - alerts:
+  -
+%{ if svc.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
+    alerts:
 %{ if service.features.resend ~}
       - type: email
 %{ endif ~}
 %{ if service.features.pushover ~}
       - type: pushover
+%{ endif ~}
 %{ endif ~}
 %{ if svc.networking.ssl_validation == false ~}
     client:

@@ -61,7 +61,7 @@ jobs:
     if: needs.changed-files.outputs.matrix != '[]'
     name: Deploy
     needs: [changed-files]
-    runs-on: [self-hosted, "${{ matrix.target.server }}-privilaged"]
+    runs-on: [self-hosted, "${{ matrix.target.server }}-privileged"]
     concurrency:
       cancel-in-progress: true
       group: deploy-${{ matrix.target.server }}
@@ -90,10 +90,12 @@ jobs:
       - name: Deploy Custom Services
         run: |
           if [ -f compose.json ]; then
+            echo "Deploying custom service $SERVICE"
             if midclt call app.get_instance "$SERVICE" > /dev/null 2>&1; then
               midclt call app.update "$SERVICE" "$(jq -c '{custom_compose_config_string}' compose.json)" > /dev/null
               echo "✓ $SERVICE updated"
             else
+              echo "$SERVICE not found; creating custom service"
               midclt call app.create "$(jq -c . compose.json)" > /dev/null
               echo "✓ $SERVICE created"
             fi
@@ -101,6 +103,7 @@ jobs:
       - name: Deploy Catalog Services
         run: |
           if [ -f app.json ]; then
+            echo "Deploying catalog service $SERVICE"
             if midclt call app.get_instance "$SERVICE" > /dev/null 2>&1; then
               # Desired values are an overlay so stripped values files keep current
               # TrueNAS defaults and unmanaged chart keys intact.
@@ -109,6 +112,7 @@ jobs:
               midclt call app.update "$SERVICE" "$(jq -c -n --argjson values "$VALUES" '{values: $values}')" > /dev/null
               echo "✓ $SERVICE updated"
             else
+              echo "$SERVICE not found; creating catalog service"
               midclt call app.create "$(jq -c . app.json)" > /dev/null
               echo "✓ $SERVICE created"
             fi

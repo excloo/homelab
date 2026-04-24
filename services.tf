@@ -105,6 +105,7 @@ locals {
   # Public service inventory without labels, used while labels are being built.
   services_output_public = {
     for k, v in local.services_model_desired : k => {
+      features      = v.features
       fqdn_external = v.fqdn_external
       fqdn_internal = v.fqdn_internal
       identity      = v.identity

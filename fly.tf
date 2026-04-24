@@ -6,7 +6,7 @@ locals {
   }
 
   # GitHub files written to the Fly deployment repository. File keys include
-  # the app directory so multiple Fly apps can share one repo.
+  # the service directory so multiple Fly services can share one repo.
   fly_render_files = merge(
     {
       for k, v in local.fly_input_services : "${v.platform_config.fly.app_name}/fly.toml" => {
@@ -48,8 +48,8 @@ locals {
   )
 }
 
-# Shared age key for the Fly deployment repository; per-app files are separated
-# by directory rather than by recipient key.
+# Shared age key for the Fly deployment repository; per-service files are
+# separated by directory rather than by recipient key.
 resource "github_actions_secret" "fly_age_key" {
   plaintext_value = age_secret_key.fly.secret_key
   repository      = local.defaults.github.repositories.fly

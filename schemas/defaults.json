@@ -106,7 +106,7 @@
           "properties": {
             "fly": {
               "type": "string",
-              "description": "Repository for Fly.io app configs (fly.toml, .env, service templates). A GitHub Actions workflow deploys from here."
+              "description": "Repository for Fly.io service configs (fly.toml, .env, service templates). A GitHub Actions workflow deploys from here."
             },
             "komodo": {
               "type": "string",
@@ -114,7 +114,7 @@
             },
             "truenas": {
               "type": "string",
-              "description": "Repository for TrueNAS app configs (compose.json, override.json, service config files). A GitHub Actions workflow applies these."
+              "description": "Repository for TrueNAS service configs (compose.json, app.json, service config files). A GitHub Actions workflow applies these."
             }
           }
         }
