@@ -6,8 +6,8 @@ on:
       - "**"
   workflow_dispatch:
     inputs:
-      path:
-        description: "App to deploy or leave empty for all"
+      service:
+        description: "Service to deploy or leave empty for all"
         required: false
 
 jobs:
@@ -35,8 +35,8 @@ jobs:
         id: manual
         if: github.event_name == 'workflow_dispatch'
         run: |
-          if [ -n "${{ inputs.path }}" ]; then
-            echo "matrix=[\"${{ inputs.path }}\"]" >> $GITHUB_OUTPUT
+          if [ -n "${{ inputs.service }}" ]; then
+            echo "matrix=[\"${{ inputs.service }}\"]" >> $GITHUB_OUTPUT
           else
             DIRS=$(find . -maxdepth 1 -mindepth 1 -type d ! -name '.*' -printf '"%f",' | sed 's/,$//')
             echo "matrix=[$DIRS]" >> $GITHUB_OUTPUT
@@ -49,17 +49,17 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       cancel-in-progress: true
-      group: deploy-${{ matrix.app }}
+      group: deploy-${{ matrix.service }}
     defaults:
       run:
-        working-directory: ${{ matrix.app }}
+        working-directory: ${{ matrix.service }}
     strategy:
       fail-fast: false
       matrix:
-        app: ${{ fromJSON(needs.changed-files.outputs.matrix) }}
+        service: ${{ fromJSON(needs.changed-files.outputs.matrix) }}
     env:
-      APP: ${{ matrix.app }}
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      SERVICE: ${{ matrix.service }}
       SOPS_AGE_KEY: ${{ secrets.AGE_KEY }}
     steps:
       - name: Checkout
@@ -70,13 +70,13 @@ jobs:
         uses: nhedger/setup-sops@v2
       - name: Decrypt Files
         run: find . -type f | xargs grep -l 'BEGIN AGE ENCRYPTED FILE' | xargs -n 1 -r sops --decrypt --in-place
-      - name: Create App
-        run: flyctl apps create "$APP" || true
+      - name: Create Service
+        run: flyctl apps create "$SERVICE" || true
       - name: Add Certificates
-        run: test -f .certs && xargs -a .certs -I{} flyctl certs add {} --app "$APP" || true
+        run: test -f .certs && xargs -a .certs -I{} flyctl certs add {} --app "$SERVICE" || true
       - name: Import Secrets
-        run: test -f .env && grep -v '^sops_' .env | flyctl secrets import --app "$APP" || true
+        run: test -f .env && grep -v '^sops_' .env | flyctl secrets import --app "$SERVICE" || true
       - name: Deploy
-        run: flyctl deploy --app "$APP" --config fly.toml > /dev/null
+        run: flyctl deploy --app "$SERVICE" --config fly.toml > /dev/null
       - name: Scale Machines
-        run: test -f .machine-count && flyctl scale count "$(tr -d '[:space:]' < .machine-count)" --app "$APP" || true
+        run: test -f .machine-count && flyctl scale count "$(tr -d '[:space:]' < .machine-count)" --app "$SERVICE" || true
