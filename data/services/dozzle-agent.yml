@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../../schemas/service.json
+deploy_to:
+  - au-haos
+features:
+  monitoring: false
+  monitoring_alerts: false
+identity:
+  description: Docker Log Agent
+  name: dozzle-agent
+  title: Dozzle Agent

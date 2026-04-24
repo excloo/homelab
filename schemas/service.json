@@ -152,8 +152,16 @@
           "properties": {
             "env": {
               "type": "object",
-              "description": "Extra environment variables merged into the service's computed env map. Values support template interpolation with ${defaults.*}, ${server.*}, ${servers.*}, and ${service.*}.",
-              "additionalProperties": { "type": "string" }
+              "description": "Extra environment variables merged into the service's computed env map. String values support template interpolation with ${defaults.*}, ${server.*}, ${servers.*}, and ${service.*}. String arrays render as '+'-joined values.",
+              "additionalProperties": {
+                "anyOf": [
+                  { "type": "string" },
+                  {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                ]
+              }
             },
             "labels": {
               "type": "object",

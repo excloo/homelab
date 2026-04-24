@@ -1,15 +1,23 @@
 # yaml-language-server: $schema=../../schemas/service.json
 deploy_to:
   - au-truenas
+features:
+  secrets:
+    - length: 64
+      name: homepage_widget_key
+      type: alphanumeric
 identity:
-  description: VPN Node
+  description: VPN
   name: tailscale
   title: Tailscale
 platform_config:
   docker:
     labels:
       homepage.description: "${service.identity.description}"
-      homepage.group: System
-      homepage.href: "https://${service.fqdn_internal}"
+      homepage.group: "${server.description}"
+      homepage.href: "https://login.tailscale.com/admin/machines/${server.tailscale_device_id}"
       homepage.icon: "${service.identity.name}"
       homepage.name: "${service.identity.title}"
+      homepage.widget.deviceid: "${server.tailscale_device_id}"
+      homepage.widget.key: "${service.homepage_widget_key_sensitive}"
+      homepage.widget.type: tailscale

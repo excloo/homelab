@@ -17,7 +17,7 @@ features:
       name: nextauth_secret
       type: alphanumeric
 identity:
-  description: Bookmark and Web Archive Manager
+  description: Bookmark Manager
   name: linkwarden
   title: Linkwarden
 networking:
@@ -27,7 +27,7 @@ platform_config:
   docker:
     labels:
       homepage.description: "${service.identity.description}"
-      homepage.group: Productivity
+      homepage.group: Applications
       homepage.href: "https://${service.fqdn_internal}"
       homepage.icon: "${service.identity.name}"
       homepage.name: "${service.identity.title}"

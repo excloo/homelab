@@ -2,7 +2,7 @@
 deploy_to:
   - au-truenas
 identity:
-  description: File Synchronisation
+  description: File Synchronization
   name: syncthing
   title: Syncthing
 networking:
@@ -12,7 +12,7 @@ platform_config:
   docker:
     labels:
       homepage.description: "${service.identity.description}"
-      homepage.group: System
+      homepage.group: "${server.description}"
       homepage.href: "https://${service.fqdn_internal}"
       homepage.icon: "${service.identity.name}"
       homepage.name: "${service.identity.title}"

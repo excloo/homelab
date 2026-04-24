@@ -4,7 +4,7 @@ deploy_to:
 features:
   password: true
 identity:
-  description: Resource Monitoring Dashboard
+  description: System Monitoring
   name: beszel
   title: Beszel
 networking:
@@ -14,7 +14,7 @@ platform_config:
   docker:
     labels:
       homepage.description: "${service.identity.description}"
-      homepage.group: System
+      homepage.group: Infrastructure
       homepage.href: "https://${service.fqdn_internal}"
       homepage.icon: "${service.identity.name}"
       homepage.name: "${service.identity.title}"

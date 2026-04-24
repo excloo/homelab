@@ -126,6 +126,28 @@ locals {
     }
   }
 
+  services_render_env = {
+    for k in keys(local.services_output_private) : k => {
+      for item in local.services_render_env_pairs : item.key => item.value
+      if item.stack == k && item.value != ""
+    }
+  }
+
+  services_render_env_pairs = flatten([
+    for k, v in local.services_output_private : [
+      for key, value in v.platform_config.docker.env :
+      {
+        key   = key
+        stack = k
+        value = try(
+          join("+", [for item in value : templatestring(tostring(item), local.services_output_vars[k])]),
+          templatestring(tostring(value), local.services_output_vars[k])
+        )
+      }
+      if value != null
+    ]
+  ])
+
   # Routing label rules live in a template; service-owned labels are plain data.
   services_render_labels = {
     for k, v in local.services_output_private : k => merge(
@@ -153,11 +175,7 @@ locals {
 
       # Fail fast on bad interpolation rather than silently rendering a literal
       # ${...} expression into deployment config.
-      env = {
-        for key, value in v.platform_config.docker.env :
-        key => templatestring(tostring(value), local.services_output_vars[k])
-        if value != null && templatestring(tostring(value), local.services_output_vars[k]) != ""
-      }
+      env = local.services_render_env[k]
     })
   }
 

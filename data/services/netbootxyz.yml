@@ -12,7 +12,7 @@ platform_config:
   docker:
     labels:
       homepage.description: "${service.identity.description}"
-      homepage.group: System
+      homepage.group: Infrastructure
       homepage.href: "https://${service.fqdn_internal}"
       homepage.icon: "${service.identity.name}"
       homepage.name: "${service.identity.title}"

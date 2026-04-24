@@ -1,7 +1,12 @@
 services:
   redlib:
-    image: quay.io/redlib/redlib:latest
+    environment:
+%{ for key in sort(nonsensitive(keys(env))) ~}
+      ${key}: ${jsonencode(env[key])}
+%{ endfor ~}
+    healthcheck:
+      disable: true
+    image: ghcr.io/silvenga/redlib:latest
     labels:
       ${indent(6, yamlencode(labels))}
-    network_mode: host
     restart: unless-stopped

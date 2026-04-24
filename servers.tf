@@ -77,11 +77,13 @@ locals {
       {
         age_public_key           = age_secret_key.server[k].public_key
         age_secret_key_sensitive = age_secret_key.server[k].secret_key
+        cloudflare_account_id    = data.cloudflare_account.default.id
         password_hash_sensitive  = v.features.password ? bcrypt_hash.server[k].id : null
         password_sensitive       = v.features.password ? random_password.server[k].result : null
         private_address          = try(local.unifi_clients[k].local_dns_record, null)
         private_ipv4             = try(local.unifi_clients[k].fixed_ip, null)
         ssh_keys                 = data.github_user.default.ssh_keys
+        tailscale_device_id      = try(local.tailscale_device_addresses[k].id, null)
         tailscale_ipv4           = try(local.tailscale_device_addresses[k].ipv4, null)
         tailscale_ipv6           = try(local.tailscale_device_addresses[k].ipv6, null)
       },
@@ -92,11 +94,12 @@ locals {
         b2_endpoint                  = replace(data.b2_account_info.default.s3_api_url, "https://", "")
       } : {},
       v.features.cloudflare_acme_token ? {
-        cloudflare_acme_account_id      = data.cloudflare_account.default.id
         cloudflare_acme_token_sensitive = cloudflare_account_token.server_acme[k].value
       } : {},
       v.features.cloudflare_zero_trust_tunnel ? {
-        cloudflare_zero_trust_tunnel_token_sensitive = data.cloudflare_zero_trust_tunnel_cloudflared_token.server[k].token
+        cloudflare_tunnel_id                   = cloudflare_zero_trust_tunnel_cloudflared.server[k].id
+        cloudflare_tunnel_read_token_sensitive = cloudflare_account_token.server_tunnel_read[k].value
+        cloudflare_tunnel_token_sensitive      = data.cloudflare_zero_trust_tunnel_cloudflared_token.server[k].token
       } : {},
       v.features.pushover ? {
         pushover_application_token_sensitive = var.pushover_application_token
