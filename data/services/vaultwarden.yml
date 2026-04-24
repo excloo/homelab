@@ -11,6 +11,7 @@ identity:
   description: Password Manager
   name: vaultwarden
   title: Vaultwarden
+  username: max@excloo.com
 networking:
   port: 30032
   scheme: https

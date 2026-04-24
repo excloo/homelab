@@ -26,6 +26,6 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - certificates:/certificates
+      - letsencrypt:/letsencrypt
 volumes:
-  certificates:
+  letsencrypt:

@@ -14,6 +14,7 @@ identity:
   description: RSS Reader
   name: miniflux
   title: Miniflux
+  username: max@excloo.com
 networking:
   port: 30285
   scheme: http

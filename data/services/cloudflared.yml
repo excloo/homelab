@@ -10,10 +10,10 @@ platform_config:
     labels:
       homepage.description: "${service.identity.description}"
       homepage.group: "${server.description}"
+      homepage.href: "https://dash.cloudflare.com/${server.cloudflare_account_id}/one/networks/connectors/cloudflare-tunnels/cfd_tunnel/${server.cloudflare_tunnel_id}/edit?tab=overview"
       homepage.icon: cloudflare
       homepage.name: "${service.identity.title}"
       homepage.widget.accountid: "${server.cloudflare_account_id}"
       homepage.widget.key: "${server.cloudflare_tunnel_read_token_sensitive}"
       homepage.widget.tunnelid: "${server.cloudflare_tunnel_id}"
       homepage.widget.type: cloudflared
-      homepage.widget.url: "https://dash.cloudflare.com/${server.cloudflare_account_id}/one/networks/connectors/cloudflare-tunnels/cfd_tunnel/${server.cloudflare_tunnel_id}/edit?tab=overview"

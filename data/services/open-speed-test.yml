@@ -12,9 +12,9 @@ platform_config:
   docker:
     labels:
       homepage.description: "${service.identity.description}"
-      homepage.group: System
+      homepage.group: "${server.description}"
       homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
+      homepage.icon: "openspeedtest"
       homepage.name: "${service.identity.title}"
   truenas:
     port_key: http_port

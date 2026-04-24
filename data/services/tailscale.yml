@@ -15,7 +15,7 @@ platform_config:
     labels:
       homepage.description: "${service.identity.description}"
       homepage.group: "${server.description}"
-      homepage.href: "https://login.tailscale.com/admin/machines/${server.tailscale_device_id}"
+      homepage.href: "https://login.tailscale.com/admin/machines/${server.tailscale_ipv4}"
       homepage.icon: "${service.identity.name}"
       homepage.name: "${service.identity.title}"
       homepage.widget.deviceid: "${server.tailscale_device_id}"

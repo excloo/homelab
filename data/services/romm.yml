@@ -29,8 +29,9 @@ identity:
   description: ROM and Game Library
   name: romm
   title: RoMM
+  username: max@excloo.com
 networking:
-  port: 30061
+  port: 8080
   scheme: http
 platform_config:
   docker:
