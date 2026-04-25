@@ -10,16 +10,9 @@ features:
 identity:
   description: Password Manager
   name: vaultwarden
+  service: vaultwarden
   title: Vaultwarden
   username: max@excloo.com
 networking:
   port: 30032
   scheme: https
-platform_config:
-  docker:
-    labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Applications
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"

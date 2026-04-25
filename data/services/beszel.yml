@@ -5,19 +5,14 @@ features:
   password: true
 identity:
   description: System Monitoring
+  group: Infrastructure
   name: beszel
+  service: beszel
   title: Beszel
   username: max@excloo.com
 networking:
   port: 30333
   scheme: http
 platform_config:
-  docker:
-    labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Infrastructure
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
   truenas:
     catalog_app: beszel-hub

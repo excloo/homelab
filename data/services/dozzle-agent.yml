@@ -7,4 +7,5 @@ features:
 identity:
   description: Docker Log Agent
   name: dozzle-agent
+  service: dozzle-agent
   title: Dozzle Agent

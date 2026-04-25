@@ -13,6 +13,7 @@ features:
 identity:
   description: RSS Reader
   name: miniflux
+  service: miniflux
   title: Miniflux
   username: max@excloo.com
 networking:
@@ -23,11 +24,6 @@ platform_config:
     env:
       BASE_URL: "https://${service.fqdn_internal}"
     labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Applications
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
       homepage.widget.key: "${service.homepage_widget_key_sensitive}"
-      homepage.widget.type: miniflux
+      homepage.widget.type: "${service.identity.service}"
       homepage.widget.url: "https://${service.fqdn_internal}"

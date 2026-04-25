@@ -9,6 +9,7 @@ features:
 identity:
   description: Application Dashboard
   name: homepage
+  service: homepage
   title: Homepage
 networking:
   port: 30054

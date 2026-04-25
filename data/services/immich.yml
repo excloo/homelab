@@ -15,7 +15,9 @@ features:
       type: alphanumeric
 identity:
   description: Photo Management
+  group: Media
   name: immich
+  service: immich
   title: Immich
   username: max@excloo.com
 networking:
@@ -24,13 +26,8 @@ networking:
 platform_config:
   docker:
     labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Media
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
       homepage.widget.key: "${service.homepage_widget_key_sensitive}"
-      homepage.widget.type: immich
+      homepage.widget.type: "${service.identity.service}"
       homepage.widget.url: "https://${service.fqdn_internal}"
       homepage.widget.version: "2"
   truenas:

@@ -1,25 +1,42 @@
-# Generated Docker labels for routing. Service-owned labels, including
-# homepage.* labels, come from platform_config.docker.labels.
-%{ if service.networking.port != null ~}
-traefik.enable: "true"
-%{ if !service.networking.ssl ~}
-traefik.http.routers.${service.identity.name}.entrypoints: web
-%{ endif ~}
-%{ if service.networking.expose == "tailscale" ~}
-traefik.http.routers.${service.identity.name}.middlewares: tailscale-only@docker
-%{ endif ~}
-%{ if service.networking.expose == "internal" ~}
-traefik.http.routers.${service.identity.name}.middlewares: internal-only@docker
-%{ endif ~}
-traefik.http.services.${service.identity.name}.loadbalancer.server.port: ${jsonencode(tostring(service.networking.port))}
-%{ if service.networking.scheme == "https" ~}
-traefik.http.services.${service.identity.name}.loadbalancer.server.scheme: https
-%{ endif ~}
-traefik.http.routers.${service.identity.name}.rule: ${jsonencode(join(" || ", concat(
-  service.fqdn_internal != null ? ["Host(`${service.fqdn_internal}`)"] : [],
-  service.fqdn_external != null ? ["Host(`${service.fqdn_external}`)"] : [],
-  [for url in service.networking.urls : "Host(`${url}`)"]
-)))}
-%{ else ~}
-{}
-%{ endif ~}
+${yamlencode(merge(
+  service.identity.service == "traefik" || service.networking.port != null || length(service.platform_config.docker.labels) > 0 ? {
+    "homepage.description" = service.identity.description
+    "homepage.group"       = service.identity.group
+    "homepage.href"        = service.fqdn_internal != null ? "https://${service.fqdn_internal}" : service.fqdn_external != null ? "https://${service.fqdn_external}" : service.networking.urls[0]
+    "homepage.icon"        = service.identity.name
+    "homepage.name"        = service.identity.title
+  } : {},
+  service.identity.service == "traefik" ? {
+    "traefik.enable"                                                    = "true"
+    "traefik.http.middlewares.autocompress.compress"                    = "true"
+    "traefik.http.middlewares.internal-only.ipallowlist.sourcerange"    = "10.0.0.0/23, 100.64.0.0/10, 127.0.0.1/32"
+    "traefik.http.middlewares.tailscale-only.ipallowlist.sourcerange"   = "100.64.0.0/10, 127.0.0.1/32"
+    "traefik.http.routers.dashboard.middlewares"                        = "tailscale-only@docker"
+    "traefik.http.routers.dashboard.rule"                               = "Host(`${service.fqdn_internal}`)"
+    "traefik.http.routers.dashboard.service"                            = "api@internal"
+    "traefik.http.services.traefik.loadbalancer.server.port"            = "8080"
+  } : {},
+  service.networking.port != null ? merge(
+    {
+      "traefik.enable"                                                          = "true"
+      "traefik.http.routers.${service.identity.name}.rule"                      = join(" || ", concat(
+        service.fqdn_internal != null ? ["Host(`${service.fqdn_internal}`)"] : [],
+        service.fqdn_external != null ? ["Host(`${service.fqdn_external}`)"] : [],
+        [for url in service.networking.urls : "Host(`${url}`)"]
+      ))
+      "traefik.http.services.${service.identity.name}.loadbalancer.server.port" = tostring(service.networking.port)
+    },
+    !service.networking.ssl ? {
+      "traefik.http.routers.${service.identity.name}.entrypoints" = "web"
+    } : {},
+    service.networking.expose == "tailscale" ? {
+      "traefik.http.routers.${service.identity.name}.middlewares" = "tailscale-only@docker"
+    } : {},
+    service.networking.expose == "internal" ? {
+      "traefik.http.routers.${service.identity.name}.middlewares" = "internal-only@docker"
+    } : {},
+    service.networking.scheme == "https" ? {
+      "traefik.http.services.${service.identity.name}.loadbalancer.server.scheme" = "https"
+    } : {}
+  ) : {}
+))}

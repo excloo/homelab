@@ -110,7 +110,9 @@ services:
     tailscale: false
   identity:
     description: ""
+    group: null
     name: ""
+    service: null
     title: ""
     username: ""
   networking:

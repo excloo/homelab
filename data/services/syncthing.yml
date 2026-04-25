@@ -6,18 +6,12 @@ features:
 identity:
   description: File Synchronization
   name: syncthing
+  service: syncthing
   title: Syncthing
   username: max@excloo.com
 networking:
   port: 20910
   scheme: http
 platform_config:
-  docker:
-    labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: "${server.description}"
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
   truenas:
     train: stable

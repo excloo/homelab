@@ -1,7 +1,14 @@
 services:
   beszel-agent:
-    image: henrygd/beszel-agent:latest
+    environment:
+%{ for key in sort(nonsensitive(keys(env))) ~}
+      ${key}: ${jsonencode(env[key])}
+%{ endfor ~}
+    image: henrygd/beszel-agent
+    labels:
+      ${indent(6, yamlencode(labels))}
     network_mode: host
     restart: unless-stopped
     volumes:
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro

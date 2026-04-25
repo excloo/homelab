@@ -9,15 +9,12 @@ features:
 identity:
   description: VPN
   name: tailscale
+  service: tailscale
   title: Tailscale
 platform_config:
   docker:
     labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: "${server.description}"
       homepage.href: "https://login.tailscale.com/admin/machines/${server.tailscale_ipv4}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
       homepage.widget.deviceid: "${server.tailscale_device_id}"
       homepage.widget.key: "${service.homepage_widget_key_sensitive}"
-      homepage.widget.type: tailscale
+      homepage.widget.type: "${service.identity.service}"

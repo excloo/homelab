@@ -3,7 +3,9 @@ deploy_to:
   - au-truenas
 identity:
   description: Container Log Viewer
+  group: Infrastructure
   name: dozzle
+  service: dozzle
   title: Dozzle
 networking:
   port: 30064
@@ -16,9 +18,3 @@ platform_config:
       DOZZLE_HOSTNAME: "${server.slug}"
       DOZZLE_NO_ANALYTICS: "true"
       DOZZLE_REMOTE_AGENT: '${join(",", [for k, svc in services : format("%s:7007", servers[svc.target].fqdn_internal) if svc.identity.name == "dozzle-agent" && contains(keys(servers), svc.target)])}'
-    labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Infrastructure
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"

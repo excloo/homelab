@@ -23,26 +23,24 @@ locals {
   # Desired service model: expanded deployment target data plus deterministic
   # names, URLs, and server FQDNs. Runtime credentials are added separately.
   services_model_desired = {
-    for k, v in local._services_input_targets : k => merge(
-      v.target == "fly" ? provider::deepmerge::mergo(
-        v,
-        {
-          fqdn_external = "${coalesce(v.platform_config.fly.app_name, "${local.defaults.organization.name}-${v.identity.name}")}.fly.dev"
-          platform_config = {
-            fly = {
-              app_name = coalesce(v.platform_config.fly.app_name, "${local.defaults.organization.name}-${v.identity.name}")
-            }
-          }
-        }
-      ) : v,
-      contains(keys(local.servers_model_desired), v.target) && contains(["cloudflare", "external"], v.networking.expose) ? {
-        fqdn_external = "${v.identity.name}.${local.servers_model_desired[v.target].fqdn_external}"
-      } : {},
-      contains(keys(local.servers_model_desired), v.target) ? {
-        fqdn_internal = "${v.identity.name}.${local.servers_model_desired[v.target].fqdn_internal}"
-      } : {},
+    for k, v in local._services_input_targets : k => provider::deepmerge::mergo(
+      v,
       {
         for i, url in v.networking.urls : "url_${i}" => url
+      },
+      {
+        fqdn_external = v.target == "fly" ? "${coalesce(v.platform_config.fly.app_name, "${local.defaults.organization.name}-${v.identity.name}")}.fly.dev" : contains(keys(local.servers_model_desired), v.target) && contains(["cloudflare", "external"], v.networking.expose) ? "${v.identity.name}.${local.servers_model_desired[v.target].fqdn_external}" : v.fqdn_external
+        fqdn_internal = contains(keys(local.servers_model_desired), v.target) ? "${v.identity.name}.${local.servers_model_desired[v.target].fqdn_internal}" : v.fqdn_internal
+
+        identity = {
+          group = v.identity.group != null ? v.identity.group : contains(keys(local.servers_model_desired), v.target) ? local.servers_model_desired[v.target].description : "Applications"
+        }
+
+        platform_config = {
+          fly = {
+            app_name = v.target == "fly" ? coalesce(v.platform_config.fly.app_name, "${local.defaults.organization.name}-${v.identity.name}") : v.platform_config.fly.app_name
+          }
+        }
       }
     )
   }
@@ -126,28 +124,6 @@ locals {
     }
   }
 
-  services_render_env = {
-    for k in keys(local.services_output_private) : k => {
-      for item in local.services_render_env_pairs : item.key => item.value
-      if item.stack == k && item.value != ""
-    }
-  }
-
-  services_render_env_pairs = flatten([
-    for k, v in local.services_output_private : [
-      for key, value in v.platform_config.docker.env :
-      {
-        key   = key
-        stack = k
-        value = try(
-          join("+", [for item in value : templatestring(tostring(item), local.services_output_vars[k])]),
-          templatestring(tostring(value), local.services_output_vars[k])
-        )
-      }
-      if value != null
-    ]
-  ])
-
   # Routing label rules live in a template; service-owned labels are plain data.
   services_render_labels = {
     for k, v in local.services_output_private : k => merge(
@@ -164,6 +140,20 @@ locals {
   services_render_vars = {
     for k, v in local.services_output_private : k => merge(local.services_output_vars[k], {
       labels = local.services_render_labels[k]
+
+      # Fail fast on bad interpolation rather than silently rendering a literal
+      # ${...} expression into deployment config.
+      env = {
+        for key, value in v.platform_config.docker.env : key => try(
+          join("+", [for item in value : templatestring(tostring(item), local.services_output_vars[k])]),
+          templatestring(tostring(value), local.services_output_vars[k])
+        )
+        if value != null && try(
+          join("+", [for item in value : templatestring(tostring(item), local.services_output_vars[k])]),
+          templatestring(tostring(value), local.services_output_vars[k])
+        ) != ""
+      }
+
       services = {
         for kk, vv in local.services_output_public : kk => merge(
           vv,
@@ -172,20 +162,16 @@ locals {
           }
         )
       }
-
-      # Fail fast on bad interpolation rather than silently rendering a literal
-      # ${...} expression into deployment config.
-      env = local.services_render_env[k]
     })
   }
 
   # Rendered Docker Compose content keyed by expanded service stack.
   services_rendered_compose = {
     for k, v in local.services_model_desired : k => templatefile(
-      "${path.module}/services/${v.identity.name}/docker-compose.yaml.tftpl",
+      "${path.module}/services/${v.identity.service}/docker-compose.yaml.tftpl",
       local.services_render_vars[k]
     )
-    if fileexists("${path.module}/services/${v.identity.name}/docker-compose.yaml.tftpl")
+    if fileexists("${path.module}/services/${v.identity.service}/docker-compose.yaml.tftpl")
   }
 
   # File extension -> SOPS input type. YAML/JSON still need a structural check
@@ -206,11 +192,11 @@ locals {
   # Other files use filebase64(), so static and binary assets share one path.
   services_rendered_file_sources = flatten([
     for k, v in local.services_model_desired : [
-      for filepath in fileset(path.module, "services/${v.identity.name}/**") : {
+      for filepath in fileset(path.module, "services/${v.identity.service}/**") : {
         path            = "${path.module}/${filepath}"
-        rel_path        = trimsuffix(trimprefix(filepath, "services/${v.identity.name}/"), ".tftpl")
+        rel_path        = trimsuffix(trimprefix(filepath, "services/${v.identity.service}/"), ".tftpl")
         render_template = endswith(filepath, ".tftpl")
-        service_name    = v.identity.name
+        service_name    = v.identity.service
         stack           = k
         target          = v.target
       }

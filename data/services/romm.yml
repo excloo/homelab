@@ -26,8 +26,10 @@ features:
       name: steamgriddb_api_key
       type: alphanumeric
 identity:
-  description: ROM and Game Library
+  description: ROM & Game Library
+  group: Media
   name: romm
+  service: romm
   title: RoMM
   username: max@excloo.com
 networking:
@@ -39,12 +41,7 @@ platform_config:
       HASHEOUS_API_ENABLED: "true"
       SCAN_TIMEOUT: "86400"
       SCREENSCRAPER_PASSWORD: "${service.screenscraper_password_sensitive}"
-      SCREENSCRAPER_USER: "max@excloo.com"
+      SCREENSCRAPER_USER: "${defaults.organization.email}"
     labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Media
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
-      homepage.widget.type: romm
+      homepage.widget.type: "${service.identity.service}"
       homepage.widget.url: "https://${service.fqdn_internal}"

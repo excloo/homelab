@@ -12,18 +12,12 @@ locals {
     if contains(keys(local.truenas_input_servers), v.target)
   }
 
-  # Catalog services are the TrueNAS services that do not provide Compose files.
-  truenas_prepare_catalog_services = {
-    for k, v in local.truenas_input_services : k => v
-    if !contains(keys(local.services_rendered_compose), k) && contains(keys(local.truenas_prepare_catalog_templates), k)
-  }
-
   # Catalog app templates live beside each service with app-specific chart values.
   truenas_prepare_catalog_templates = {
     for k, v in local.truenas_input_services : k => {
-      path = "${path.module}/services/${v.identity.name}/app.json.tftpl"
+      path = "${path.module}/services/${v.identity.service}/app.json.tftpl"
     }
-    if fileexists("${path.module}/services/${v.identity.name}/app.json.tftpl")
+    if fileexists("${path.module}/services/${v.identity.service}/app.json.tftpl")
   }
 
   # Encrypted GitHub files consumed by the TrueNAS deploy workflow.
@@ -45,7 +39,7 @@ locals {
       if contains(keys(local.services_rendered_compose), k)
     },
     {
-      for k, v in local.truenas_prepare_catalog_services : "${v.target}/${v.identity.name}/app.json" => {
+      for k, v in local.truenas_input_services : "${v.target}/${v.identity.name}/app.json" => {
         age_public_key = age_secret_key.server[v.target].public_key
         commit_message = "Update ${k} catalog app"
         content_type   = "json"
@@ -56,6 +50,7 @@ locals {
           yamldecode(templatefile(local.truenas_prepare_catalog_templates[k].path, local.services_render_vars[k]))
         ))))
       }
+      if !contains(keys(local.services_rendered_compose), k) && contains(keys(local.truenas_prepare_catalog_templates), k)
     },
     {
       for k, v in local.services_rendered_files : "${v.target}/${local.services_model_desired[v.stack].identity.name}/${v.rel_path}" => merge(v, {
@@ -147,7 +142,7 @@ resource "terraform_data" "truenas_validation" {
         if !contains(keys(local.services_rendered_compose), k) &&
         !contains(keys(local.truenas_prepare_catalog_templates), k)
       ]) == 0
-      error_message = "TrueNAS catalog services require services/{identity.name}/app.json.tftpl: ${join(", ", [
+      error_message = "TrueNAS catalog services require services/{identity.service}/app.json.tftpl: ${join(", ", [
         for k, v in local.truenas_input_services : k
         if !contains(keys(local.services_rendered_compose), k) &&
         !contains(keys(local.truenas_prepare_catalog_templates), k)

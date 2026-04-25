@@ -19,6 +19,7 @@ features:
 identity:
   description: Bookmark Manager
   name: linkwarden
+  service: linkwarden
   title: Linkwarden
 networking:
   port: 30243
@@ -26,11 +27,6 @@ networking:
 platform_config:
   docker:
     labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Applications
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
       homepage.widget.key: "${service.homepage_widget_key_sensitive}"
-      homepage.widget.type: linkwarden
+      homepage.widget.type: "${service.identity.service}"
       homepage.widget.url: "https://${service.fqdn_internal}"

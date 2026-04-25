@@ -18,7 +18,7 @@
     },
     "features": {
       "type": "object",
-      "description": "Feature flags that provision resources, expose template values, or control generated config for this service instance.",
+      "description": "Feature flags that provision resources, expose template values or control generated config for this service instance.",
       "additionalProperties": false,
       "properties": {
         "b2": {
@@ -80,17 +80,26 @@
     "identity": {
       "type": "object",
       "description": "Human-readable identifiers and dashboard metadata for this service.",
-      "required": ["name", "title"],
+      "required": ["name", "service", "title"],
       "additionalProperties": false,
       "properties": {
         "description": {
           "type": "string",
           "description": "One-line description of what this service does. Shown in dashboards and status pages."
         },
+        "group": {
+          "type": ["string", "null"],
+          "description": "Dashboard group. Defaults to the target server description for server-targeted services or Applications when no target server exists."
+        },
         "name": {
           "type": "string",
           "description": "Short identifier used to build FQDNs and subdomain labels (e.g. 'vaultwarden'). Combined with the target server FQDN: {name}.{server_fqdn}.{domain}.",
           "pattern": "^[a-z0-9-]+$"
+        },
+        "service": {
+          "type": "string",
+          "description": "Implementation key used to select templates from services/{service}.",
+          "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
         },
         "title": {
           "type": "string",
@@ -218,7 +227,7 @@
           "properties": {
             "catalog_app": {
               "type": ["string", "null"],
-              "description": "TrueNAS catalog app name. Defaults to identity.name when null.",
+              "description": "TrueNAS catalog app name. Defaults to identity.service when null.",
               "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
             },
             "port_key": {
@@ -233,7 +242,7 @@
             },
             "containers": {
               "type": "array",
-              "description": "Container names that should receive generated labels for TrueNAS catalog apps. Defaults to identity.name when empty.",
+              "description": "Container names that should receive generated labels for TrueNAS catalog apps. Defaults to identity.service when empty.",
               "items": {
                 "type": "string",
                 "pattern": "^[a-z0-9-]+$"

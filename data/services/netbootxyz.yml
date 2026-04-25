@@ -3,19 +3,14 @@ deploy_to:
   - au-truenas
 identity:
   description: Network Boot Server
+  group: Infrastructure
   name: netbootxyz
+  service: netbootxyz
   title: Netboot
 networking:
   port: 31010
   scheme: http
 platform_config:
-  docker:
-    labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Infrastructure
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
   truenas:
     port_key: web_http_port
     containers:

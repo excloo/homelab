@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../schemas/service.json
+deploy_to:
+  - au-truenas
+identity:
+  description: Network Speed Test
+  name: openspeedtest
+  service: openspeedtest
+  title: Open Speed Test
+networking:
+  port: 30116
+  scheme: http
+platform_config:
+  truenas:
+    port_key: http_port

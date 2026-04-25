@@ -4,6 +4,7 @@ deploy_to:
 identity:
   description: Reddit Frontend
   name: redlib
+  service: redlib
   title: Redlib
 networking:
   port: 8080
@@ -95,9 +96,3 @@ platform_config:
         - ubiquiti
         - usbchardware
         - wallstreetbets
-    labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: Applications
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
