@@ -13,19 +13,19 @@ data "bitwarden_organization" "default" {
 }
 
 resource "bitwarden_item_login" "server" {
-  for_each = local.servers_output_private
+  for_each = local.servers_model_desired
 
   collection_ids  = [data.bitwarden_org_collection.servers.id]
   name            = each.key
   organization_id = data.bitwarden_organization.default.id
-  password        = each.value.password_sensitive
-  username        = each.value.identity.username
+  password        = local.servers_output_private[each.key].password_sensitive
+  username        = local.servers_output_private[each.key].identity.username
 
   # Store scalar non-default fields as custom fields. *_sensitive fields become
   # hidden Bitwarden fields; URL-like fields are handled as URI entries below.
   dynamic "field" {
     for_each = {
-      for k, v in each.value : k => v
+      for k, v in local.servers_output_private[each.key] : k => v
       if v != null && v != "" && v != false && !can(regex(local.defaults.bitwarden.url_field_pattern, k)) && !contains(keys(local.defaults_server), k) && can(tostring(v))
     }
 
@@ -41,11 +41,11 @@ resource "bitwarden_item_login" "server" {
   dynamic "uri" {
     for_each = merge(
       {
-        for k, v in each.value : k => v
+        for k, v in local.servers_output_private[each.key] : k => v
         if v != null && v != "" && v != false && can(regex(local.defaults.bitwarden.url_field_pattern, k)) && can(tostring(v))
       },
-      each.value.networking.management_address != "" ? {
-        management_address = each.value.networking.management_address
+      local.servers_output_private[each.key].networking.management_address != "" ? {
+        management_address = local.servers_output_private[each.key].networking.management_address
       } : {}
     )
 
@@ -54,7 +54,7 @@ resource "bitwarden_item_login" "server" {
       value = format(
         "%s%s",
         can(cidrhost("${uri.value}/128", 0)) ? "[${uri.value}]" : uri.value,
-        each.value.networking.management_port != 443 ? ":${each.value.networking.management_port}" : ""
+        local.servers_output_private[each.key].networking.management_port != 443 ? ":${local.servers_output_private[each.key].networking.management_port}" : ""
       )
     }
   }
@@ -62,20 +62,20 @@ resource "bitwarden_item_login" "server" {
 
 resource "bitwarden_item_login" "service" {
   for_each = {
-    for k, v in local.services_output_private : k => v
+    for k, v in local.services_model_desired : k => k
     if anytrue([for k, v in v.features : tobool(v) if can(tobool(v))]) || length(v.features.secrets) > 0 || v.networking.scheme != null
   }
 
   collection_ids  = [data.bitwarden_org_collection.services.id]
-  name            = "${each.value.identity.title} (${each.value.target})"
+  name            = "${local.services_output_private[each.key].identity.title} (${local.services_output_private[each.key].target})"
   organization_id = data.bitwarden_organization.default.id
-  password        = each.value.password_sensitive
-  username        = each.value.identity.username
+  password        = local.services_output_private[each.key].password_sensitive
+  username        = local.services_output_private[each.key].identity.username
 
   # Store generated and computed scalar service fields, excluding defaults and URLs.
   dynamic "field" {
     for_each = {
-      for k, v in each.value : k => v
+      for k, v in local.services_output_private[each.key] : k => v
       if v != null && v != "" && v != false && !can(regex(local.defaults.bitwarden.url_field_pattern, k)) && !contains(keys(local.defaults_service), k) && can(tostring(v))
     }
 
@@ -89,7 +89,7 @@ resource "bitwarden_item_login" "service" {
   # Service URI entries come from computed fqdn_/url_ fields.
   dynamic "uri" {
     for_each = {
-      for k, v in each.value : k => v
+      for k, v in local.services_output_private[each.key] : k => v
       if v != null && v != "" && v != false && can(regex(local.defaults.bitwarden.url_field_pattern, k)) && can(tostring(v))
     }
 
