@@ -62,7 +62,7 @@ resource "bitwarden_item_login" "server" {
 
 resource "bitwarden_item_login" "service" {
   for_each = {
-    for k, v in local.services_output_private : k => v
+    for k, v in nonsensitive(local.services_output_private) : k => v
     if anytrue([for k, v in v.features : tobool(v) if can(tobool(v))]) || length(v.features.secrets) > 0 || v.networking.scheme != null
   }
 
