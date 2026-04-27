@@ -1,11 +1,6 @@
 # yaml-language-server: $schema=../../schemas/service.json
 deploy_to:
   - au-truenas
-features:
-  secrets:
-    - length: 64
-      name: homepage_widget_key
-      type: alphanumeric
 identity:
   description: VPN
   name: tailscale

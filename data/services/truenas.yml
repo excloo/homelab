@@ -1,11 +1,6 @@
 # yaml-language-server: $schema=../../schemas/service.json
 deploy_to:
   - au-truenas
-features:
-  secrets:
-    - length: 66
-      name: homepage_widget_key
-      type: string
 identity:
   description: Network Attached Storage
   group: Infrastructure

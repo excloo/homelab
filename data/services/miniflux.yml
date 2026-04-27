@@ -7,9 +7,6 @@ features:
     - length: 32
       name: db_password
       type: alphanumeric
-    - length: 64
-      name: homepage_widget_key
-      type: alphanumeric
 identity:
   description: RSS Reader
   group: Applications

@@ -50,6 +50,10 @@ terraform {
       source  = "linyinfeng/shell"
       version = "~> 1.0"
     }
+    sops = {
+      source  = "carlpett/sops"
+      version = "~> 1.4"
+    }
     tailscale = {
       source  = "tailscale/tailscale"
       version = ">= 0.28, < 1.0"

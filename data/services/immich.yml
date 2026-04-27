@@ -4,13 +4,10 @@ deploy_to:
 features:
   password: true
   secrets:
-    - length: 24
+    - length: 32
       name: db_password
       type: alphanumeric
-    - length: 24
-      name: homepage_widget_key
-      type: alphanumeric
-    - length: 24
+    - length: 32
       name: redis_password
       type: alphanumeric
 identity:

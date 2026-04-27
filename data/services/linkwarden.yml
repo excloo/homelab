@@ -7,9 +7,6 @@ features:
     - length: 32
       name: db_password
       type: alphanumeric
-    - length: 197
-      name: homepage_widget_key
-      type: string
     - length: 32
       name: meilisearch_master_key
       type: alphanumeric
@@ -18,6 +15,7 @@ features:
       type: alphanumeric
 identity:
   description: Bookmark Manager
+  group: Applications
   name: linkwarden
   service: linkwarden
   title: Linkwarden

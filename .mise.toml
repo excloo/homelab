@@ -1,14 +1,19 @@
+[env]
+TF_CLI_ARGS_apply = "-parallelism=20"
+TF_CLI_ARGS_plan = "-parallelism=20"
+
 [tools]
 "pipx:check-jsonschema" = "latest"
+age = "1"
 opentofu = "1"
 prettier = "3"
 sops = "3"
 
-[env]
-TF_CLI_ARGS_plan = "-parallelism=20"
-TF_CLI_ARGS_apply = "-parallelism=20"
-
 # Setup
+[tasks.init]
+description = "Initialize OpenTofu"
+run = "tofu init"
+
 [tasks.setup]
 description = "Initial project setup"
 run = """
@@ -21,15 +26,12 @@ if [[ ! -f .mise.local.toml ]]; then
 fi
 """
 
-[tasks.init]
-description = "Initialize OpenTofu"
-run = "tofu init"
-
 # Development
 [tasks.check]
 description = "Format check, lint and validate"
 depends = ["lint", "validate"]
 run = """
+[[ -f data/secrets.sops.yml ]] && grep -q '^sops:' data/secrets.sops.yml
 prettier --check "data/**/*.yml" "templates/**/*.yml"
 tofu fmt -check -recursive
 """
@@ -54,15 +56,16 @@ check-jsonschema --schemafile schemas/service.json data/services/*.yml
 description = "Validate configurations"
 run = "tofu validate"
 
+# Secrets
+[tasks.secrets-edit]
+description = "Edit encrypted secrets"
+run = "EDITOR=\"code --wait\" sops data/secrets.sops.yml"
+
+[tasks.secrets-view]
+description = "View encrypted secrets"
+run = "sops --decrypt data/secrets.sops.yml"
+
 # Deployment
-[tasks.refresh]
-description = "Check for configuration drift"
-run = "tofu refresh"
-
-[tasks.plan]
-description = "Plan all changes"
-run = "tofu plan"
-
 [tasks.apply]
 description = "Apply all changes"
 run = """
@@ -73,3 +76,11 @@ else
   tofu apply
 fi
 """
+
+[tasks.plan]
+description = "Plan all changes"
+run = "tofu plan"
+
+[tasks.refresh]
+description = "Check for configuration drift"
+run = "tofu refresh"

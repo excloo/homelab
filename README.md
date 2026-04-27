@@ -106,6 +106,19 @@ All generated credentials are stored automatically in **Bitwarden** in two colle
 - **Servers** — one login entry per server; all generated fields (passwords, API keys, IPs, FQDNs, tunnel tokens) stored as custom fields
 - **Services** — one login entry per service deployment with the same pattern
 
+Provided or externally generated secrets can live in `data/secrets.sops.yml`. The file is encrypted with SOPS/age in Git and read during OpenTofu runs. Keys under `servers.<server>`, `services.<service>`, or `services.<service-target>` are exposed as `{key}_sensitive` in templates.
+
+```yaml
+servers:
+  au-truenas:
+    api_token: ...
+services:
+  truenas:
+    homepage_widget_key: ...
+```
+
+Set `SOPS_AGE_KEY` in `.mise.local.toml` or use the standard SOPS age key file, then use `mise run secrets-edit`.
+
 ## Documentation
 
 - [AGENTS.md](AGENTS.md) - Development guide and standards

@@ -4,26 +4,14 @@ deploy_to:
 features:
   password: true
   secrets:
-    - length: 24
+    - length: 32
       name: auth_secret_key
       type: alphanumeric
-    - length: 24
+    - length: 32
       name: db_password
       type: alphanumeric
-    - length: 30
-      name: igdb_client_id
-      type: alphanumeric
-    - length: 30
-      name: igdb_client_secret
-      type: alphanumeric
-    - length: 24
-      name: redis_password
-      type: alphanumeric
-    - length: 24
-      name: screenscraper_password
-      type: alphanumeric
     - length: 32
-      name: steamgriddb_api_key
+      name: redis_password
       type: alphanumeric
 identity:
   description: ROM & Game Library

@@ -8,6 +8,10 @@ locals {
     filepath => yamldecode(file("${path.module}/${filepath}"))
   }
 
+  # Optional SOPS-encrypted overrides for provided or externally generated
+  # secrets. Generated secrets still come from provider/runtime resources.
+  _secrets = try(yamldecode(data.sops_file.secrets["default"].raw), {})
+
   # Public defaults exclude per-domain schema defaults, which get their own locals.
   defaults = {
     for k, v in local._defaults : k => v

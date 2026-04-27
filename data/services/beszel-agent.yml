@@ -3,10 +3,6 @@ deploy_to:
   - au-truenas
 features:
   password: true
-  secrets:
-    - length: 32
-      name: token
-      type: alphanumeric
 identity:
   description: Resource Monitoring Agent
   name: beszel-agent
@@ -21,12 +17,12 @@ platform_config:
       TOKEN: "${service.token_sensitive}"
     labels:
       homepage.description: '${services["beszel-${service.target}"].identity.description}'
-      homepage.href: 'https://${services["beszel-${service.target}"].fqdn_internal}/system/gwxh9qgbo45j87q'
+      homepage.href: 'https://${services["beszel-${service.target}"].fqdn_internal}/system/${service.system_id_sensitive}'
       homepage.icon: '${services["beszel-${service.target}"].identity.name}'
       homepage.name: '${services["beszel-${service.target}"].identity.title}'
       homepage.widget.fields: '["status", "cpu", "memory", "network"]'
       homepage.widget.password: "${service.password_sensitive}"
-      homepage.widget.systemId: gwxh9qgbo45j87q
+      homepage.widget.systemId: "${service.system_id_sensitive}"
       homepage.widget.type: beszel
       homepage.widget.url: 'https://${services["beszel-${service.target}"].fqdn_internal}'
       homepage.widget.username: "${defaults.organization.email}"

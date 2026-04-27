@@ -87,6 +87,9 @@ locals {
         tailscale_ipv4           = try(local.tailscale_device_addresses[k].ipv4, null)
         tailscale_ipv6           = try(local.tailscale_device_addresses[k].ipv6, null)
       },
+      {
+        for secret_key, secret_value in try(local._secrets.servers[k], {}) : "${secret_key}_sensitive" => sensitive(secret_value)
+      },
       v.features.b2 ? {
         b2_application_key_id        = b2_application_key.server[k].application_key_id
         b2_application_key_sensitive = b2_application_key.server[k].application_key

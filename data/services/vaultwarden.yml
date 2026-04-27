@@ -4,7 +4,7 @@ deploy_to:
 features:
   password: true
   secrets:
-    - length: 24
+    - length: 32
       name: db_password
       type: alphanumeric
 identity:
