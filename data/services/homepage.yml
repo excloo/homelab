@@ -1,29 +1,12 @@
 # yaml-language-server: $schema=../../schemas/service.json
 deploy_to:
   - au-truenas
-features:
-  secrets:
-    - length: 66
-      name: homepage_widget_key
-      type: string
 identity:
   description: Application Dashboard
+  group: Applications
   name: homepage
   service: homepage
   title: Homepage
 networking:
   port: 30054
   scheme: http
-platform_config:
-  docker:
-    labels:
-      homepage.description: Network Attached Storage
-      homepage.group: Infrastructure
-      homepage.href: "https://${server.fqdn_internal}:8443"
-      homepage.icon: truenas
-      homepage.name: TrueNAS
-      homepage.widget.enablePools: "true"
-      homepage.widget.key: "${service.homepage_widget_key_sensitive}"
-      homepage.widget.type: truenas
-      homepage.widget.url: "https://${server.fqdn_internal}:8443"
-      homepage.widget.version: "2"

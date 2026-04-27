@@ -12,6 +12,7 @@ features:
       type: alphanumeric
 identity:
   description: RSS Reader
+  group: Applications
   name: miniflux
   service: miniflux
   title: Miniflux

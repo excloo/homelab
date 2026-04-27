@@ -13,58 +13,40 @@ on:
         description: "Service to deploy or leave empty for all"
         required: false
 
+concurrency:
+  cancel-in-progress: true
+  group: deploy
+
 jobs:
   changed-files:
-    name: Check Changed Files
+    name: Build Matrix
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
+      matrix: ${{ steps.targets.outputs.targets }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Check Changed Files
-        id: changed-files
-        if: github.event_name == 'push'
-        uses: tj-actions/changed-files@v47
-        with:
-          dir_names: true
-          dir_names_max_depth: 2
-          dir_names_exclude_current_dir: true
-          files_ignore: ".*/**"
-          matrix: true
-      - name: Manual Files
-        id: manual
-        if: github.event_name == 'workflow_dispatch'
+      - name: Select Targets
+        id: targets
         run: |
-          if [ -n "${{ inputs.server }}" ] && [ -n "${{ inputs.service }}" ]; then
-            printf '%s\n' "${{ inputs.server }}/${{ inputs.service }}" | jq -Rsc 'split("\n")[:-1]' | sed 's/^/targets=/' >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ inputs.server }}" ]; then
-            find "${{ inputs.server }}" -maxdepth 1 -mindepth 1 -type d -printf '%p\n' | jq -Rsc 'split("\n")[:-1]' | sed 's/^/targets=/' >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ inputs.service }}" ]; then
-            find . -maxdepth 2 -mindepth 2 -type d -name "${{ inputs.service }}" -printf '%P\n' | jq -Rsc 'split("\n")[:-1]' | sed 's/^/targets=/' >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.server }}" ] && [ -n "${{ inputs.service }}" ]; then
+            TARGETS=$(printf '%s\n' "${{ inputs.server }}/${{ inputs.service }}")
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.server }}" ]; then
+            TARGETS=$(find "${{ inputs.server }}" -maxdepth 1 -mindepth 1 -type d -printf '%p\n')
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.service }}" ]; then
+            TARGETS=$(find . -maxdepth 2 -mindepth 2 -type d -name "${{ inputs.service }}" -printf '%P\n')
           else
-            find . -maxdepth 2 -mindepth 2 -type d ! -path './.*' -printf '%P\n' | jq -Rsc 'split("\n")[:-1]' | sed 's/^/targets=/' >> "$GITHUB_OUTPUT"
+            TARGETS=$(find . -maxdepth 2 -mindepth 2 -type d ! -path './.*' -printf '%P\n')
           fi
-      - name: Build Matrix
-        id: matrix
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            TARGETS='${{ steps.changed-files.outputs.all_changed_files }}'
-          else
-            TARGETS='${{ steps.manual.outputs.targets }}'
-          fi
-          printf '%s' "$TARGETS" | jq -c '[.[] | select(test("^[^./][^/]*/[^/]+$")) | split("/") as $parts | {path: ., secret_name: ("AGE_KEY_" + ($parts[0] | ascii_upcase | gsub("-"; "_"))), server: $parts[0], service: $parts[1]}]' | sed 's/^/matrix=/' >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$TARGETS" | jq -Rsc '[split("\n")[] | select(test("^[^./][^/]*/[^/]+$")) | split("/") as $parts | {path: ., secret_name: ("AGE_KEY_" + ($parts[0] | ascii_upcase | gsub("-"; "_"))), server: $parts[0], service: $parts[1]}]' | sed 's/^/targets=/' >> "$GITHUB_OUTPUT"
 
   deploy:
     if: needs.changed-files.outputs.matrix != '[]'
     name: Deploy
     needs: [changed-files]
     runs-on: [self-hosted, "${{ matrix.target.server }}-privileged"]
-    concurrency:
-      cancel-in-progress: true
-      group: deploy-${{ matrix.target.server }}-${{ matrix.target.service }}
     defaults:
       run:
         working-directory: ${{ matrix.target.path }}
@@ -92,7 +74,7 @@ jobs:
           if [ -f compose.json ]; then
             echo "Deploying custom service $SERVICE"
             if midclt call app.get_instance "$SERVICE" > /dev/null 2>&1; then
-              midclt call -j app.update "$SERVICE" "$(jq -c '{custom_compose_config, custom_compose_config_string}' compose.json)" > /dev/null
+              midclt call -j app.update "$SERVICE" "$(jq -c '{custom_compose_config}' compose.json)" > /dev/null
               echo "✓ $SERVICE updated"
             else
               echo "$SERVICE not found; creating custom service"

@@ -1,0 +1,9 @@
+services:
+  truenas:
+    command:
+      - sleep
+      - infinity
+    image: alpine:latest
+    labels:
+      ${indent(6, yamlencode(labels))}
+    restart: unless-stopped

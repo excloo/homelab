@@ -3,6 +3,7 @@ deploy_to:
   - au-truenas
 identity:
   description: Reddit Frontend
+  group: Applications
   name: redlib
   service: redlib
   title: Redlib

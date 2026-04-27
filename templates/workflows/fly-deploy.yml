@@ -10,46 +10,36 @@ on:
         description: "Service to deploy or leave empty for all"
         required: false
 
+concurrency:
+  cancel-in-progress: true
+  group: deploy
+
 jobs:
   changed-files:
-    name: Check Changed Files
+    name: Build Matrix
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.changed-files.outputs.all_changed_files || steps.manual.outputs.matrix }}
+      matrix: ${{ steps.targets.outputs.targets }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Check Changed Files
-        id: changed-files
-        if: github.event_name == 'push'
-        uses: tj-actions/changed-files@v47
-        with:
-          dir_names: true
-          dir_names_max_depth: 1
-          dir_names_exclude_current_dir: true
-          files_ignore: ".*/**"
-          matrix: true
-      - name: Manual Files
-        id: manual
-        if: github.event_name == 'workflow_dispatch'
+      - name: Select Targets
+        id: targets
         run: |
-          if [ -n "${{ inputs.service }}" ]; then
-            echo "matrix=[\"${{ inputs.service }}\"]" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.service }}" ]; then
+            TARGETS=$(printf '%s\n' "${{ inputs.service }}")
           else
-            DIRS=$(find . -maxdepth 1 -mindepth 1 -type d ! -name '.*' -printf '"%f",' | sed 's/,$//')
-            echo "matrix=[$DIRS]" >> $GITHUB_OUTPUT
+            TARGETS=$(find . -maxdepth 1 -mindepth 1 -type d ! -name '.*' -printf '%f\n')
           fi
+          printf '%s\n' "$TARGETS" | jq -Rsc '[split("\n")[] | select(test("^[^./][^/]*$"))]' | sed 's/^/targets=/' >> "$GITHUB_OUTPUT"
 
   deploy:
     if: needs.changed-files.outputs.matrix != '[]'
     name: Deploy
     needs: [changed-files]
     runs-on: ubuntu-latest
-    concurrency:
-      cancel-in-progress: true
-      group: deploy-${{ matrix.service }}
     defaults:
       run:
         working-directory: ${{ matrix.service }}

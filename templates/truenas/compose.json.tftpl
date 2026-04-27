@@ -1,6 +1,5 @@
 ${jsonencode({
-  app_name                     = service.identity.name
-  custom_app                   = true
-  custom_compose_config        = yamldecode(compose)
-  custom_compose_config_string = compose
+  app_name              = service.identity.name
+  custom_app            = true
+  custom_compose_config = yamldecode(compose)
 })}

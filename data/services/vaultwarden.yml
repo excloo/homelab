@@ -9,6 +9,7 @@ features:
       type: alphanumeric
 identity:
   description: Password Manager
+  group: Applications
   name: vaultwarden
   service: vaultwarden
   title: Vaultwarden
