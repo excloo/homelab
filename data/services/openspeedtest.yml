@@ -13,3 +13,5 @@ platform_config:
   truenas:
     catalog_app: open-speed-test
     port_key: http_port
+    containers:
+      - open-speed-test
