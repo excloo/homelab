@@ -50,7 +50,7 @@ locals {
   services_model_runtime = {
     for k, v in local._services_input_targets : k => merge(
       {
-        for secret_key, secret_value in try(local._secrets.services[k], {}) : "${secret_key}_sensitive" => sensitive(secret_value)
+        for secret_key, secret_value in merge(try(local._secrets.services[v.identity.name], {}), try(local._secrets.services[k], {})) : "${secret_key}_sensitive" => sensitive(secret_value)
       },
       v.features.b2 ? {
         b2_application_key_id        = b2_application_key.service[k].application_key_id
