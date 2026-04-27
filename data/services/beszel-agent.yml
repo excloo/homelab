@@ -1,15 +1,33 @@
 # yaml-language-server: $schema=../../schemas/service.json
 deploy_to:
   - au-truenas
+features:
+  password: true
+  secrets:
+    - length: 32
+      name: token
+      type: alphanumeric
 identity:
   description: Resource Monitoring Agent
   name: beszel-agent
+  service: beszel-agent
   title: Beszel Agent
 platform_config:
   docker:
+    env:
+      HUB_URL: http://localhost:30333
+      KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPkxnKuxsVqSVZVXQ3OGHjZZFMAAclU/xLrEDdwOyRt+
+      LISTEN: "45876"
+      TOKEN: "${service.token_sensitive}"
     labels:
-      homepage.description: "${service.identity.description}"
-      homepage.group: System
-      homepage.href: "https://${service.fqdn_internal}"
-      homepage.icon: "${service.identity.name}"
-      homepage.name: "${service.identity.title}"
+      homepage.description: '${services["beszel-${service.target}"].identity.description}'
+      homepage.href: 'https://${services["beszel-${service.target}"].fqdn_internal}/system/gwxh9qgbo45j87q'
+      homepage.icon: '${services["beszel-${service.target}"].identity.name}'
+      homepage.name: '${services["beszel-${service.target}"].identity.title}'
+      homepage.widget.fields: '["status", "cpu", "memory", "network"]'
+      homepage.widget.password: "${service.password_sensitive}"
+      homepage.widget.systemId: gwxh9qgbo45j87q
+      homepage.widget.type: beszel
+      homepage.widget.url: 'https://${services["beszel-${service.target}"].fqdn_internal}'
+      homepage.widget.username: "${defaults.organization.email}"
+      homepage.widget.version: "2"

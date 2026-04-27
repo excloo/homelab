@@ -40,24 +40,35 @@ jobs:
           else
             TARGETS=$(find . -maxdepth 2 -mindepth 2 -type d ! -path './.*' -printf '%P\n')
           fi
-          printf '%s\n' "$TARGETS" | jq -Rsc '[split("\n")[] | select(test("^[^./][^/]*/[^/]+$")) | split("/") as $parts | {path: ., secret_name: ("AGE_KEY_" + ($parts[0] | ascii_upcase | gsub("-"; "_"))), server: $parts[0], service: $parts[1]}]' | sed 's/^/targets=/' >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$TARGETS" | jq -Rsc '
+            [
+              split("\n")[]
+              | select(test("^[^./][^/]*/[^/]+$"))
+              | split("/") as $parts
+              | {path: ., server: $parts[0], service: $parts[1]}
+            ]
+            | sort_by(.server, .service)
+            | group_by(.server)
+            | map({
+                paths: map(.path) | sort,
+                secret_name: ("AGE_KEY_" + (.[0].server | ascii_upcase | gsub("-"; "_"))),
+                server: .[0].server
+              })
+          ' | sed 's/^/targets=/' >> "$GITHUB_OUTPUT"
 
   deploy:
     if: needs.changed-files.outputs.matrix != '[]'
-    name: Deploy
+    name: Deploy ${{ matrix.target.server }}
     needs: [changed-files]
     runs-on: [self-hosted, "${{ matrix.target.server }}-privileged"]
-    defaults:
-      run:
-        working-directory: ${{ matrix.target.path }}
     strategy:
       fail-fast: false
       matrix:
         target: ${{ fromJSON(needs.changed-files.outputs.matrix) }}
     env:
       SERVER: ${{ matrix.target.server }}
-      SERVICE: ${{ matrix.target.service }}
       SOPS_AGE_KEY: ${{ secrets[matrix.target.secret_name] }}
+      TARGET_PATHS: ${{ toJSON(matrix.target.paths) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -68,50 +79,55 @@ jobs:
       - name: Setup midclt
         run: uv tool install --python 3.12 git+https://github.com/truenas/api_client.git
       - name: Decrypt Files
-        run: find . -type f | xargs grep -l 'BEGIN AGE ENCRYPTED FILE' | xargs -r sops --decrypt --in-place
-      - name: Deploy Custom Services
         run: |
-          if [ -f compose.json ]; then
-            echo "Deploying custom service $SERVICE"
-            if midclt call app.get_instance "$SERVICE" > /dev/null 2>&1; then
-              midclt call -j app.update "$SERVICE" "$(jq -c '{custom_compose_config}' compose.json)" > /dev/null
-              echo "✓ $SERVICE updated"
-            else
-              echo "$SERVICE not found; creating custom service"
-              midclt call -j app.create "$(jq -c . compose.json)" > /dev/null
-              echo "✓ $SERVICE created"
+          find "$SERVER" -type f -print0 | while IFS= read -r -d '' f; do
+            if grep -qE 'BEGIN AGE ENCRYPTED FILE|ENC\[AES256_GCM' "$f"; then
+              sops --decrypt --in-place "$f"
             fi
-          fi
-      - name: Deploy Catalog Services
+          done
+      - name: Deploy Services
         run: |
-          if [ -f app.json ]; then
-            echo "Deploying catalog service $SERVICE"
-            if midclt call app.get_instance "$SERVICE" > /dev/null 2>&1; then
-              # Desired values are an overlay so stripped values files keep current
-              # TrueNAS defaults and unmanaged chart keys intact.
-              CURRENT="$(midclt call app.config "$SERVICE" | jq -c 'del(.ix_context, .ix_volumes, .ix_certificates, .ix_certificate_authorities)')"
-              VALUES="$(jq -c --argjson current "$CURRENT" '.values as $desired | $current * $desired' app.json)"
-              midclt call -j app.update "$SERVICE" "$(jq -c -n --argjson values "$VALUES" '{values: $values}')" > /dev/null
-              echo "✓ $SERVICE updated"
-            else
-              echo "$SERVICE not found; creating catalog service"
-              midclt call -j app.create "$(jq -c . app.json)" > /dev/null
-              echo "✓ $SERVICE created"
+          printf '%s' "$TARGET_PATHS" | jq -r '.[]' | while read -r TARGET_PATH; do
+            SERVICE=$(basename "$TARGET_PATH")
+            echo "Deploying $SERVICE"
+
+            if [ -f "$TARGET_PATH/app.json" ]; then
+              echo "Deploying catalog service $SERVICE"
+              if midclt call app.get_instance "$SERVICE" > /dev/null 2>&1; then
+                PAYLOAD="$(jq -c '{values}' "$TARGET_PATH/app.json")"
+                midclt call -j app.update "$SERVICE" "$PAYLOAD" > /dev/null
+                echo "✓ $SERVICE updated"
+              else
+                echo "$SERVICE not found; creating catalog service"
+                midclt call -j app.create "$(jq -c . "$TARGET_PATH/app.json")" > /dev/null
+                echo "✓ $SERVICE created"
+              fi
             fi
-          fi
-      - name: Push Config Files
-        run: |
-          find . -mindepth 2 -type f ! -name "app.json" ! -name "compose.json" | while read -r f; do
-            CONTAINER_DIR="$(echo "$f" | cut -d'/' -f1-2)/"
-            CONTAINER_SERVICE=$(basename "$CONTAINER_DIR")
-            CONTAINER=$(docker ps --format '{{.Names}}' | grep -m1 "^ix-${SERVICE}-${CONTAINER_SERVICE}-" || true)
-            if [ -z "$CONTAINER" ] && [ "$CONTAINER_SERVICE" != "$SERVICE" ]; then
-              CONTAINER=$(docker ps --format '{{.Names}}' | grep -m1 "^ix-${SERVICE}-${SERVICE}-" || true)
+
+            if [ -f "$TARGET_PATH/compose.json" ]; then
+              echo "Deploying custom service $SERVICE"
+              if midclt call app.get_instance "$SERVICE" > /dev/null 2>&1; then
+                midclt call -j app.update "$SERVICE" "$(jq -c '{custom_compose_config}' "$TARGET_PATH/compose.json")" > /dev/null
+                echo "✓ $SERVICE updated"
+              else
+                echo "$SERVICE not found; creating custom service"
+                midclt call -j app.create "$(jq -c . "$TARGET_PATH/compose.json")" > /dev/null
+                echo "✓ $SERVICE created"
+              fi
             fi
-            if [ -n "$CONTAINER" ]; then
-              docker cp "$f" "$CONTAINER:/${f#"$CONTAINER_DIR"}"
-              echo "✓ $CONTAINER:/${f#"$CONTAINER_DIR"}"
-            else
-              echo "⚠ no container found matching ix-${SERVICE}-${CONTAINER_SERVICE}-* or ix-${SERVICE}-${SERVICE}-*"
-            fi
+
+            find "$TARGET_PATH" -mindepth 2 -type f ! -name "app.json" ! -name "compose.json" | while read -r f; do
+              REL_PATH="${f#"$TARGET_PATH"/}"
+              CONTAINER_SERVICE="${REL_PATH%%/*}"
+              CONTAINER=$(docker ps --format '{{.Names}}' | grep -m1 "^ix-${SERVICE}-${CONTAINER_SERVICE}-" || true)
+              if [ -z "$CONTAINER" ] && [ "$CONTAINER_SERVICE" != "$SERVICE" ]; then
+                CONTAINER=$(docker ps --format '{{.Names}}' | grep -m1 "^ix-${SERVICE}-${SERVICE}-" || true)
+              fi
+              if [ -n "$CONTAINER" ]; then
+                docker cp "$f" "$CONTAINER:/$REL_PATH"
+                echo "✓ $CONTAINER:/$REL_PATH"
+              else
+                echo "⚠ no container found matching ix-${SERVICE}-${CONTAINER_SERVICE}-* or ix-${SERVICE}-${SERVICE}-*"
+              fi
+            done
           done

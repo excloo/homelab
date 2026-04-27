@@ -112,7 +112,6 @@ services:
     description: ""
     group: null
     name: ""
-    service: null
     title: ""
     username: ""
   networking:
