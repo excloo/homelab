@@ -4,6 +4,11 @@
   "custom_app": false,
   "train": "${service.platform_config.truenas.train}",
   "values": {
+%{ if length(envs) > 0 ~}
+    "${service.identity.service}": {
+      "additional_envs": ${jsonencode(envs)}
+    },
+%{ endif ~}
     "labels": ${jsonencode([
       for label_key in sort(keys(labels)) : {
         containers = length(service.platform_config.truenas.containers) > 0 ? service.platform_config.truenas.containers : [service.identity.service]

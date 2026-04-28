@@ -115,6 +115,17 @@ locals {
     }
   }
 
+  # Base template context used to resolve declared service references.
+  services_output_ref_context = {
+    for k, v in local.services_model_desired : k => {
+      defaults = local.defaults
+      server   = try(local.servers_output_public[v.target], null)
+      servers  = local.servers_output_public
+      service  = v
+      services = local.services_output_public
+    }
+  }
+
   # Template contexts are intentionally small: templates get the current service,
   # the selected server when present, public inventory maps, and global defaults.
   services_output_vars = {
@@ -124,6 +135,27 @@ locals {
       servers  = local.servers_output_public
       service  = v
       services = local.services_output_public
+
+      refs = {
+        services = {
+          for alias, service_ref in v.references.services :
+          alias => local.services_output_private[templatestring(service_ref, local.services_output_ref_context[k])]
+        }
+      }
+    }
+  }
+
+  # Docker env is stored as typed YAML but rendered as strings for deployment.
+  services_render_env = {
+    for k, v in local.services_output_private : k => {
+      for key, value in v.platform_config.docker.env : key => try(
+        join("+", [for item in value : templatestring(tostring(item), local.services_output_vars[k])]),
+        templatestring(tostring(value), local.services_output_vars[k])
+      )
+      if value != null && try(
+        join("+", [for item in value : templatestring(tostring(item), local.services_output_vars[k])]),
+        templatestring(tostring(value), local.services_output_vars[k])
+      ) != ""
     }
   }
 
@@ -142,20 +174,15 @@ locals {
   # Full template context adds rendered env, labels, and public service inventory.
   services_render_vars = {
     for k, v in local.services_output_private : k => merge(local.services_output_vars[k], {
+      env    = local.services_render_env[k]
       labels = local.services_render_labels[k]
 
-      # Fail fast on bad interpolation rather than silently rendering a literal
-      # ${...} expression into deployment config.
-      env = {
-        for key, value in v.platform_config.docker.env : key => try(
-          join("+", [for item in value : templatestring(tostring(item), local.services_output_vars[k])]),
-          templatestring(tostring(value), local.services_output_vars[k])
-        )
-        if value != null && try(
-          join("+", [for item in value : templatestring(tostring(item), local.services_output_vars[k])]),
-          templatestring(tostring(value), local.services_output_vars[k])
-        ) != ""
-      }
+      envs = [
+        for key in sort(nonsensitive(keys(local.services_render_env[k]))) : {
+          name  = key
+          value = local.services_render_env[k][key]
+        }
+      ]
 
       services = {
         for kk, vv in local.services_output_public : kk => merge(
@@ -299,6 +326,16 @@ resource "terraform_data" "services_validation" {
     precondition {
       condition     = length([for k, v in local._services_input_source : k if contains(v.deploy_to, "fly") && v.networking.port == null]) == 0
       error_message = "Fly services must have networking.port set: ${join(", ", [for k, v in local._services_input_source : k if contains(v.deploy_to, "fly") && v.networking.port == null])}"
+    }
+
+    precondition {
+      condition = length(flatten([
+        for k, v in local.services_model_desired : [
+          for alias, service_ref in v.references.services : "${k}.${alias} -> ${templatestring(service_ref, local.services_output_ref_context[k])}"
+          if !contains(keys(local.services_model_desired), templatestring(service_ref, local.services_output_ref_context[k]))
+        ]
+      ])) == 0
+      error_message = "Invalid service references found in services configuration: ${join(", ", flatten([for k, v in local.services_model_desired : [for alias, service_ref in v.references.services : "${k}.${alias} -> ${templatestring(service_ref, local.services_output_ref_context[k])}" if !contains(keys(local.services_model_desired), templatestring(service_ref, local.services_output_ref_context[k]))]]))}"
     }
 
     # Pushover values are pass-through variables, so provider validation will not

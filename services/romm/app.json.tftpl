@@ -14,13 +14,7 @@
       "mobygames_api_key": "",
       "postgres_image_selector": "postgres_18_image",
       "redis_password": "${service.redis_password_sensitive}",
-      "steamgriddb_api_key": "${service.steamgriddb_api_key_sensitive}",
-      "additional_envs": ${jsonencode([
-        for key in sort(nonsensitive(keys(env))) : {
-          name  = key
-          value = env[key]
-        }
-      ])}
+      "steamgriddb_api_key": "${service.steamgriddb_api_key_sensitive}"
     },
     "storage": {
       "assets": {

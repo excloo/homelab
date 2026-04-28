@@ -1,13 +1,5 @@
 {
   "values": {
-    "dozzle": {
-      "additional_envs": ${jsonencode([
-        for key in sort(nonsensitive(keys(env))) : {
-          name  = key
-          value = env[key]
-        }
-      ])}
-    },
     "network": {
       "host_network": false,
       "web_port": {

@@ -1,8 +1,6 @@
 # yaml-language-server: $schema=../../schemas/service.json
 deploy_to:
   - au-truenas
-features:
-  password: true
 identity:
   description: Resource Monitoring Agent
   name: beszel-agent
@@ -13,17 +11,20 @@ platform_config:
     env:
       HUB_URL: http://localhost:30333
       KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPkxnKuxsVqSVZVXQ3OGHjZZFMAAclU/xLrEDdwOyRt+
-      LISTEN: "45876"
-      TOKEN: "${service.token_sensitive}"
+      LISTEN: 45876
+      TOKEN: ${service.token_sensitive}
     labels:
-      homepage.description: '${services["beszel-${service.target}"].identity.description}'
-      homepage.href: 'https://${services["beszel-${service.target}"].fqdn_internal}/system/${service.system_id_sensitive}'
-      homepage.icon: '${services["beszel-${service.target}"].identity.name}'
-      homepage.name: '${services["beszel-${service.target}"].identity.title}'
-      homepage.widget.fields: '["status", "cpu", "memory", "network"]'
-      homepage.widget.password: "${service.password_sensitive}"
-      homepage.widget.systemId: "${service.system_id_sensitive}"
+      homepage.description: ${refs.services.beszel.identity.description}
+      homepage.href: https://${refs.services.beszel.fqdn_internal}/system/${service.system_id_sensitive}
+      homepage.icon: ${refs.services.beszel.identity.name}
+      homepage.name: ${refs.services.beszel.identity.title}
+      homepage.widget.fields: ${jsonencode(split(",", "status,cpu,memory,network"))}
+      homepage.widget.password: ${refs.services.beszel.password_sensitive}
+      homepage.widget.systemId: ${service.system_id_sensitive}
       homepage.widget.type: beszel
-      homepage.widget.url: 'https://${services["beszel-${service.target}"].fqdn_internal}'
-      homepage.widget.username: "${defaults.organization.email}"
+      homepage.widget.url: https://${refs.services.beszel.fqdn_internal}
+      homepage.widget.username: ${defaults.organization.email}
       homepage.widget.version: "2"
+references:
+  services:
+    beszel: beszel-${service.target}

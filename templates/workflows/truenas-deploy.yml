@@ -94,7 +94,9 @@ jobs:
             if [ -f "$TARGET_PATH/app.json" ]; then
               echo "Deploying catalog service $SERVICE"
               if midclt call app.get_instance "$SERVICE" > /dev/null 2>&1; then
-                midclt call -j app.update "$SERVICE" "$(jq -c '{values}' "$TARGET_PATH/app.json")" > /dev/null
+                CURRENT_VALUES=$(midclt call app.config "$SERVICE")
+                UPDATE_PAYLOAD=$(jq -n -c --argjson current "$CURRENT_VALUES" --slurpfile desired "$TARGET_PATH/app.json" '{values: ($current * ($desired[0].values // {}))}')
+                midclt call -j app.update "$SERVICE" "$UPDATE_PAYLOAD" > /dev/null
                 echo "✓ $SERVICE updated"
               else
                 echo "$SERVICE not found; creating catalog service"

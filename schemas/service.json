@@ -161,20 +161,28 @@
           "properties": {
             "env": {
               "type": "object",
-              "description": "Extra environment variables merged into the service's computed env map. String values support template interpolation with ${defaults.*}, ${server.*}, ${servers.*}, and ${service.*}. String arrays render as '+'-joined values.",
+              "description": "Extra environment variables merged into the service's computed env map. Values are stringified and quoted by render templates. String values support template interpolation with ${defaults.*}, ${refs.*}, ${server.*}, ${servers.*}, ${service.*}, and ${services.*}. String arrays render as '+'-joined values.",
               "additionalProperties": {
                 "anyOf": [
+                  { "type": "boolean" },
+                  { "type": "number" },
                   { "type": "string" },
                   {
                     "type": "array",
-                    "items": { "type": "string" }
+                    "items": {
+                      "anyOf": [
+                        { "type": "boolean" },
+                        { "type": "number" },
+                        { "type": "string" }
+                      ]
+                    }
                   }
                 ]
               }
             },
             "labels": {
               "type": "object",
-              "description": "Extra Docker labels merged into generated routing labels. Values support template interpolation with ${defaults.*}, ${server.*}, ${servers.*}, and ${service.*}.",
+              "description": "Extra Docker labels merged into generated routing labels. Values support template interpolation with ${defaults.*}, ${refs.*}, ${server.*}, ${servers.*}, ${service.*}, and ${services.*}.",
               "additionalProperties": { "type": "string" }
             }
           }
@@ -249,6 +257,21 @@
               },
               "uniqueItems": true
             }
+          }
+        }
+      }
+    },
+    "references": {
+      "type": "object",
+      "description": "Private service references exposed to templates as refs.services.{alias}.",
+      "additionalProperties": false,
+      "properties": {
+        "services": {
+          "type": "object",
+          "description": "Map of local alias to target-expanded service key. Values support template interpolation with ${defaults.*}, ${server.*}, ${servers.*}, ${service.*}, and ${services.*}.",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*(\\$\\{[^}]+\\}[a-z0-9-]*)*$"
           }
         }
       }

@@ -1,42 +1,35 @@
 # yaml-language-server: $schema=../schemas/defaults.json
 bitwarden:
   organization: Homelab
-  url_field_pattern: "(^fqdn_|^url_|_(ipv[46]|address)$)"
+  url_field_pattern: (^fqdn_|^url_|_(ipv[46]|address)$)
   collections:
     servers: Servers
     services: Services
-
 cloudflare:
   account_name: excloo
-
 dns:
   priority: null
   proxied: false
   ttl: 1
   wildcard: false
-
 domains:
   acme: 043847.xyz
   external: excloo.net
   internal: excloo.dev
-
 github:
   owner: excloo
   repositories:
     fly: fly
     komodo: komodo
     truenas: truenas
-
 organization:
   email: max@excloo.com
   managed_comment: OpenTofu Managed
   name: excloo
-
 resend:
   host: smtp.resend.com
   port: 465
   username: resend
-
 servers:
   fqdn: null
   parent: ""
@@ -91,7 +84,6 @@ servers:
         - 22
         - 80
         - 443
-
 services:
   fqdn_external: null
   fqdn_internal: null
@@ -138,12 +130,12 @@ services:
       port_key: web_port
       train: community
       containers: []
-
+  references:
+    services: {}
 system:
   locale: en_AU
   shell: /bin/bash
   timezone: Australia/Sydney
-
 tailscale:
   admin_identities:
     - max@excloo.com

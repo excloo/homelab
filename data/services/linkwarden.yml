@@ -3,6 +3,7 @@ deploy_to:
   - au-truenas
 features:
   password: true
+  resend: true
   secrets:
     - length: 32
       name: db_password
@@ -24,7 +25,12 @@ networking:
   scheme: http
 platform_config:
   docker:
+    env:
+      BASE_URL: https://${service.fqdn_internal}
+      EMAIL_FROM: ${defaults.organization.email}
+      EMAIL_SERVER: smtps://${defaults.resend.username}:${urlencode(service.resend_api_key_sensitive)}@${defaults.resend.host}:${defaults.resend.port}
+      NEXT_PUBLIC_EMAIL_PROVIDER: true
     labels:
-      homepage.widget.key: "${service.homepage_widget_key_sensitive}"
-      homepage.widget.type: "${service.identity.service}"
-      homepage.widget.url: "https://${service.fqdn_internal}"
+      homepage.widget.key: ${service.homepage_widget_key_sensitive}
+      homepage.widget.type: ${service.identity.service}
+      homepage.widget.url: https://${service.fqdn_internal}

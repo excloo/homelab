@@ -1,12 +1,6 @@
 {
   "values": {
     "miniflux": {
-      "additional_envs": ${jsonencode([
-        for key in sort(nonsensitive(keys(env))) : {
-          name  = key
-          value = env[key]
-        }
-      ])},
       "admin_password": "${service.password_sensitive}",
       "admin_username": "max@excloo.com",
       "db_password": "${service.db_password_sensitive}",

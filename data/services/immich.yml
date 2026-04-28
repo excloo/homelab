@@ -23,9 +23,9 @@ networking:
 platform_config:
   docker:
     labels:
-      homepage.widget.key: "${service.homepage_widget_key_sensitive}"
-      homepage.widget.type: "${service.identity.service}"
-      homepage.widget.url: "https://${service.fqdn_internal}"
+      homepage.widget.key: ${service.homepage_widget_key_sensitive}
+      homepage.widget.type: ${service.identity.service}
+      homepage.widget.url: https://${service.fqdn_internal}
       homepage.widget.version: "2"
   truenas:
     containers:

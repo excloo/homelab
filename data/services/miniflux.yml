@@ -20,8 +20,8 @@ networking:
 platform_config:
   docker:
     env:
-      BASE_URL: "https://${service.fqdn_internal}"
+      BASE_URL: https://${service.fqdn_internal}
     labels:
-      homepage.widget.key: "${service.homepage_widget_key_sensitive}"
-      homepage.widget.type: "${service.identity.service}"
-      homepage.widget.url: "https://${service.fqdn_internal}"
+      homepage.widget.key: ${service.homepage_widget_key_sensitive}
+      homepage.widget.type: ${service.identity.service}
+      homepage.widget.url: https://${service.fqdn_internal}

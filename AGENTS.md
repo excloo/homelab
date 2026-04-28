@@ -104,6 +104,7 @@ Always set `overwrite_on_create = true`. SOPS-encrypted files use `shell_sensiti
 ## YAML Standards
 
 - **Formatting**: Prettier (run via `mise run fmt`)
+- **Quotes**: Avoid quotes unless YAML would misparse the value or the intended type would change. Docker env values may use native YAML booleans/numbers because render templates stringify and quote them. Use quotes for empty strings, `@`, DNS TXT content with literal quotes, and JSON-like string values. Do not use `\x22` escapes for human-authored quote characters.
 - **Defaults**: `data/defaults.yml` defines the full schema; per-resource files only include overrides
 - **Descriptions**: Short, title case
 
