@@ -115,6 +115,7 @@ resource "shell_sensitive_script" "truenas_services_files_encrypt" {
     CONTENT_TYPE   = each.value.content_type
     DEBUG_PATH     = var.debug_dir != "" ? "${var.debug_dir}/${local.defaults.github.repositories.truenas}/${each.key}" : ""
     FILENAME       = each.value.file
+    SOPS_CONFIG    = "/dev/null"
   }
 
   lifecycle_commands {

@@ -103,6 +103,7 @@ resource "shell_sensitive_script" "komodo_stacks_files_encrypt" {
     CONTENT_TYPE   = each.value.content_type
     DEBUG_PATH     = var.debug_dir != "" ? "${var.debug_dir}/${local.defaults.github.repositories.komodo}/${each.key}" : ""
     FILENAME       = each.value.file
+    SOPS_CONFIG    = "/dev/null"
   }
 
   lifecycle_commands {
