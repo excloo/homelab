@@ -30,9 +30,9 @@ locals {
     for service_key, service in local.services_input_targets : service_key => merge(
       {
         for secret in service.features.secrets : "${secret.name}_sensitive" => sensitive(
-          try(local._secrets.services[service_key][secret.name], local._secrets.services[service.identity.name][secret.name])
+          try(local.sops_secrets.services[service_key][secret.name], local.sops_secrets.services[service.identity.name][secret.name])
         )
-        if secret.type == "external" && can(try(local._secrets.services[service_key][secret.name], local._secrets.services[service.identity.name][secret.name]))
+        if secret.type == "external" && can(try(local.sops_secrets.services[service_key][secret.name], local.sops_secrets.services[service.identity.name][secret.name]))
       },
       service.features.b2 ? {
         b2_application_key_id        = b2_application_key.service[service_key].application_key_id

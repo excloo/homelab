@@ -31,7 +31,7 @@ ${yamlencode(concat(
       for server in values(servers) : server.type == "router" ? "Routers" : server.type == "vm" ? "VMs" : server.type == "appliance" ? "Appliances" : "Servers"
     ])) : {
       (group) = [
-        for k, server in servers : {
+        for server in values(servers) : {
           (server.description) = {
             description = server.platform
             href        = "https://${server.fqdn_internal}"

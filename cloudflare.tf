@@ -26,7 +26,7 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "server" {
 }
 
 data "cloudflare_zone" "all" {
-  for_each = local.dns
+  for_each = local.dns_input
 
   filter = {
     name = each.key

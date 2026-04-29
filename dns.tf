@@ -1,4 +1,12 @@
 locals {
+  # Final DNS input map: zone name -> list of manually declared records.
+  dns_input = {
+    for dns_file in [
+      for file_path in fileset(path.module, "data/dns/*.yml") :
+      yamldecode(file("${path.module}/${file_path}"))
+    ] : dns_file.name => try(dns_file.records, [])
+  }
+
   # Delegate ACME challenges for every generated hostname back to the dedicated
   # ACME zone, so one scoped Cloudflare token can satisfy DNS-01 clients.
   dns_records_acme_delegation = {
@@ -23,7 +31,7 @@ locals {
   # Manual DNS records are keyed by either explicit id or stable record fields to
   # avoid identity churn when records are reordered in YAML.
   dns_records_manual = merge([
-    for zone, records in local.dns : {
+    for zone, records in local.dns_input : {
       for record in records : "${zone}-manual-${try(record.id, join("-", compact([record.type, replace(record.name, "@", "apex"), tostring(try(record.priority, ""))])))}" => provider::deepmerge::mergo(
         local.defaults_dns,
         merge(
@@ -193,7 +201,7 @@ locals {
   }
 
   # Managed Cloudflare zone names available for manual and generated records.
-  dns_zones = keys(local.dns)
+  dns_zones = keys(local.dns_input)
 
   # Pick the longest managed zone suffix for each custom URL, so nested domains
   # choose the most specific Cloudflare zone.

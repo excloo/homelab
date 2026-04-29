@@ -25,7 +25,7 @@ Key computed locals:
 
 Within any object — YAML, HCL, or JSON Schema `properties` — sort single-line assignments alphabetically by key first, then multi-line assignments alphabetically by key.
 
-Underscore-prefixed locals (`_defaults`, `_dns_raw`) sort before non-prefixed ones (ASCII `_` = 95 < `a` = 97).
+Underscore-prefixed locals sort before non-prefixed ones (ASCII `_` = 95 < `a` = 97).
 
 This applies consistently to `data/` YAML files, `schemas/*.json` property lists, resource attribute blocks, `environment {}` blocks, and `templatefile()` argument objects. Inside staged HCL `locals {}` blocks, sort top-level locals alphabetically by name and sort object attributes inside each local. Only assignments that span multiple lines count as multi-line values; a single-line assignment like `identity = v.identity` sorts alphabetically with every other single-line assignment. When `CONTENT = base64encode(...)` spans multiple lines it is multi-line and goes last; single-line `CONTENT` assignments sort alphabetically with the other single-line attributes.
 
@@ -56,6 +56,7 @@ Complex locals use alphabetical group words so file order matches data-flow orde
 
 Server and service models are split by responsibility:
 
+- `dns.tf` — DNS input loading plus manual/generated DNS record models
 - `servers_input.tf` / `services_input.tf` — raw deepmerged data, input helpers, and deploy-target expansion
 - `servers_model.tf` / `services_model.tf` — desired/runtime model locals
 - `servers_outputs.tf` / `services_outputs.tf` — public/private views, import context, base render variables, and sensitive output shaping
@@ -64,6 +65,11 @@ Server and service models are split by responsibility:
 - `servers_validation.tf` / `services_validation.tf` — validation helper locals and `terraform_data` precondition checks
 
 ```
+dns_input                          zone-name keyed manual DNS input
+dns_records_*                      manual and generated DNS record maps
+dns_zones                          managed Cloudflare zone names
+dns_zones_urls                     custom URL to managed zone lookup
+
 servers_input                       raw deepmerged data
 servers_input_ancestors             bounded parent lookup chain
 servers_input_context               helper map for inheritance and descriptions

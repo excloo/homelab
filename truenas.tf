@@ -119,15 +119,15 @@ resource "shell_sensitive_script" "truenas_services_files_encrypt" {
   }
 
   lifecycle_commands {
-    create = sensitive(local.script_sops_encrypt)
+    create = sensitive(local.sops_script_encrypt)
     delete = "true"
-    read   = sensitive(local.script_sops_encrypt)
-    update = sensitive(local.script_sops_encrypt)
+    read   = sensitive(local.sops_script_encrypt)
+    update = sensitive(local.sops_script_encrypt)
   }
 
   triggers = {
     age_public_key_hash = sha256(each.value.age_public_key)
-    script_hash         = sha256(local.script_sops_encrypt)
+    script_hash         = sha256(local.sops_script_encrypt)
   }
 }
 

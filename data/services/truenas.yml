@@ -14,14 +14,14 @@ identity:
 platform_config:
   docker:
     labels:
-      homepage.href: https://${server.fqdn_internal}
+      homepage.href: https://${server.fqdn_internal}:${server.networking.management_port}
       homepage.widget.enablePools: "true"
       homepage.widget.key: ${service.homepage_widget_key_sensitive}
       homepage.widget.type: truenas
-      homepage.widget.url: https://${server.fqdn_internal}
+      homepage.widget.url: https://${server.fqdn_internal}:${server.networking.management_port}
       homepage.widget.version: "2"
       traefik.enable: "true"
       traefik.http.routers.truenas.middlewares: tailscale-only@docker
       traefik.http.routers.truenas.rule: Host(`${server.fqdn_internal}`)
       traefik.http.routers.truenas.service: truenas
-      traefik.http.services.truenas.loadbalancer.server.url: https://127.0.0.1:${server.networking.management_port}
+      traefik.http.services.truenas.loadbalancer.server.url: https://localhost:${server.networking.management_port}

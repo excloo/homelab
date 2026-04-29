@@ -24,7 +24,7 @@ alerting:
       success-threshold: 5
 %{ endif ~}
 endpoints:
-%{ for k, server in servers ~}
+%{ for server_key, server in servers ~}
   - alerts:
 %{ if service.features.resend ~}
       - type: email
@@ -35,14 +35,14 @@ endpoints:
     conditions:
       - "[CONNECTED] == true"
     group: "${server.type == "router" ? "Routers" : server.type == "vm" ? "VMs" : "Servers"}"
-    name: "${k}"
+    name: "${server_key}"
     url: "icmp://${server.fqdn_internal}"
 %{ endfor ~}
-%{ for k, svc in services ~}
-%{ if svc.features.monitoring && svc.networking.scheme != null ~}
-%{ for url in svc.networking.urls ~}
+%{ for service_key, monitored_service in services ~}
+%{ if monitored_service.features.monitoring && monitored_service.networking.scheme != null ~}
+%{ for url in monitored_service.networking.urls ~}
   -
-%{ if svc.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
+%{ if monitored_service.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
     alerts:
 %{ if service.features.resend ~}
       - type: email
@@ -51,23 +51,23 @@ endpoints:
       - type: pushover
 %{ endif ~}
 %{ endif ~}
-%{ if svc.networking.ssl_validation == false ~}
+%{ if monitored_service.networking.ssl_validation == false ~}
     client:
       insecure: true
 %{ endif ~}
     conditions:
-%{ if svc.networking.ssl && svc.networking.ssl_validation ~}
+%{ if monitored_service.networking.ssl && monitored_service.networking.ssl_validation ~}
       - "[CERTIFICATE_EXPIRATION] > 48h"
 %{ endif ~}
       - "[RESPONSE_TIME] < 5000"
       - "[STATUS] == any(200, 401)"
     group: "Services"
-    name: "${svc.identity.title} (${svc.target})"
-    url: "${svc.networking.ssl ? "https" : "http"}://${url}"
+    name: "${monitored_service.identity.title} (${monitored_service.target})"
+    url: "${monitored_service.networking.ssl ? "https" : "http"}://${url}"
 %{ endfor ~}
-%{ if svc.fqdn_external != null ~}
+%{ if monitored_service.fqdn_external != null ~}
   -
-%{ if svc.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
+%{ if monitored_service.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
     alerts:
 %{ if service.features.resend ~}
       - type: email
@@ -76,23 +76,23 @@ endpoints:
       - type: pushover
 %{ endif ~}
 %{ endif ~}
-%{ if svc.networking.ssl_validation == false ~}
+%{ if monitored_service.networking.ssl_validation == false ~}
     client:
       insecure: true
 %{ endif ~}
     conditions:
-%{ if svc.networking.ssl && svc.networking.ssl_validation ~}
+%{ if monitored_service.networking.ssl && monitored_service.networking.ssl_validation ~}
       - "[CERTIFICATE_EXPIRATION] > 48h"
 %{ endif ~}
       - "[RESPONSE_TIME] < 5000"
       - "[STATUS] == any(200, 401)"
     group: "Services (External)"
-    name: "${svc.identity.title} (${svc.target})"
-    url: "${svc.networking.ssl ? "https" : "http"}://${svc.fqdn_external}"
+    name: "${monitored_service.identity.title} (${monitored_service.target})"
+    url: "${monitored_service.networking.ssl ? "https" : "http"}://${monitored_service.fqdn_external}"
 %{ endif ~}
-%{ if svc.fqdn_internal != null ~}
+%{ if monitored_service.fqdn_internal != null ~}
   -
-%{ if svc.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
+%{ if monitored_service.features.monitoring_alerts && (service.features.resend || service.features.pushover) ~}
     alerts:
 %{ if service.features.resend ~}
       - type: email
@@ -101,19 +101,19 @@ endpoints:
       - type: pushover
 %{ endif ~}
 %{ endif ~}
-%{ if svc.networking.ssl_validation == false ~}
+%{ if monitored_service.networking.ssl_validation == false ~}
     client:
       insecure: true
 %{ endif ~}
     conditions:
-%{ if svc.networking.ssl && svc.networking.ssl_validation ~}
+%{ if monitored_service.networking.ssl && monitored_service.networking.ssl_validation ~}
       - "[CERTIFICATE_EXPIRATION] > 48h"
 %{ endif ~}
       - "[RESPONSE_TIME] < 5000"
       - "[STATUS] == any(200, 401)"
     group: "Services (Internal)"
-    name: "${svc.identity.title} (${svc.target})"
-    url: "${svc.networking.ssl ? "https" : "http"}://${svc.fqdn_internal}"
+    name: "${monitored_service.identity.title} (${monitored_service.target})"
+    url: "${monitored_service.networking.ssl ? "https" : "http"}://${monitored_service.fqdn_internal}"
 %{ endif ~}
 %{ endif ~}
 %{ endfor ~}

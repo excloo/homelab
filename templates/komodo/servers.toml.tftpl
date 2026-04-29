@@ -1,13 +1,13 @@
-%{ for k, v in servers ~}
-%{ if v.features.docker ~}
+%{ for server_key, server in servers ~}
+%{ if server.features.docker ~}
 [[server]]
-description = "${v.description}"
-name = "${k}"
+description = "${server.description}"
+name = "${server_key}"
 
 [server.config]
-address = "https://${v.fqdn_internal}:8120"
+address = "https://${server.fqdn_internal}:8120"
 enabled = true
-region = "${v.identity.region}"
+region = "${server.identity.region}"
 
 %{ endif ~}
 %{ endfor ~}

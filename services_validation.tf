@@ -11,7 +11,7 @@ locals {
   services_validation_external_secrets_missing = flatten([
     for service_key, service in local.services_input_targets : [
       for secret in service.features.secrets : "${service_key}.${secret.name}"
-      if secret.type == "external" && !can(try(local._secrets.services[service_key][secret.name], local._secrets.services[service.identity.name][secret.name]))
+      if secret.type == "external" && !can(try(local.sops_secrets.services[service_key][secret.name], local.sops_secrets.services[service.identity.name][secret.name]))
     ]
   ])
 

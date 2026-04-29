@@ -1,13 +1,13 @@
-%{ for k, v in stacks ~}
+%{ for stack_key, stack in stacks ~}
 [[stack]]
-description = "${v.identity.title}"
-name = "${k}"
+description = "${stack.identity.title}"
+name = "${stack_key}"
 
 [stack.config]
 auto_update = true
 repo = "${owner}/${repository}"
-run_directory = "${k}"
-server = "${v.target}"
+run_directory = "${stack_key}"
+server = "${stack.target}"
 
 [stack.config.pre_deploy]
 command = "export SOPS_AGE_KEY=[[AGE_SECRET_KEY]] && find . \\( -name '*.yaml' -o -name '*.toml' \\) -exec sops decrypt -i {} \\;"
