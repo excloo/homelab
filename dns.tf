@@ -14,6 +14,7 @@ locals {
       for source_record in concat(
         values(local.dns_records_manual),
         values(local.dns_records_servers),
+        values(local.dns_records_services),
         values(local.dns_records_services_urls)
         ) : {
         name = source_record.name

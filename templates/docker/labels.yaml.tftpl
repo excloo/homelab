@@ -10,6 +10,7 @@ ${yamlencode(merge(
   service.networking.port != null ? merge(
     {
       "traefik.enable"                                                          = "true"
+      "traefik.http.routers.${service.identity.name}.entrypoints" = service.networking.ssl ? "websecure" : "web"
       "traefik.http.routers.${service.identity.name}.rule"                      = join(" || ", concat(
         service.fqdn_internal != null ? ["Host(`${service.fqdn_internal}`)"] : [],
         service.fqdn_external != null ? ["Host(`${service.fqdn_external}`)"] : [],
@@ -17,9 +18,6 @@ ${yamlencode(merge(
       ))
       "traefik.http.services.${service.identity.name}.loadbalancer.server.port" = tostring(service.networking.port)
     },
-    !service.networking.ssl ? {
-      "traefik.http.routers.${service.identity.name}.entrypoints" = "web"
-    } : {},
     service.networking.expose == "tailscale" ? {
       "traefik.http.routers.${service.identity.name}.middlewares" = "tailscale-only@docker"
     } : {},

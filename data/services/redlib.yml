@@ -8,8 +8,11 @@ identity:
   service: redlib
   title: Redlib
 networking:
+  expose: cloudflare
   port: 8080
   scheme: http
+  urls:
+    - reddit.excloo.com
 platform_config:
   docker:
     env:

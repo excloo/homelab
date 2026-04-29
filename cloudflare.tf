@@ -167,3 +167,41 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "server" {
   config_src = "cloudflare"
   name       = each.key
 }
+
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "server" {
+  for_each = local.servers_outputs_by_feature.cloudflare_zero_trust_tunnel
+
+  account_id = data.cloudflare_account.default.id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.server[each.key].id
+
+  config = {
+    ingress = concat(
+      flatten([
+        for service_key, service in local.services_model_desired : [
+          for hostname in distinct(concat(
+            service.fqdn_external != null ? [service.fqdn_external] : [],
+            [for url in service.networking.urls : url if lookup(local.dns_zones_urls, url, null) != null]
+            )) : {
+            hostname = hostname
+            service  = "https://localhost"
+
+            origin_request = {
+              no_tls_verify      = true
+              origin_server_name = hostname
+            }
+          }
+        ]
+        if service.target == each.key && service.networking.expose == "cloudflare"
+      ]),
+      [
+        {
+          service = "http_status:503"
+        }
+      ]
+    )
+
+    warp_routing = {
+      enabled = false
+    }
+  }
+}
