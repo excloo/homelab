@@ -1,30 +1,35 @@
 ${yamlencode(concat(
   [
-  for group in sort(distinct([
-    for svc in values(services) : svc.labels["homepage.group"]
-    if svc.target != service.target && lookup(svc.labels, "homepage.group", "") != "" && lookup(svc.labels, "homepage.name", "") != ""
-  ])) : {
-    (group) = [
-      for svc in values(services) : {
-        (svc.labels["homepage.name"]) = merge(
-          {
-            for label_key, label_value in svc.labels : trimprefix(label_key, "homepage.") => label_value
-            if startswith(label_key, "homepage.") && !contains(["homepage.group", "homepage.name"], label_key) && !startswith(label_key, "homepage.widget.")
-          },
-          length([
-            for label_key in keys(svc.labels) : label_key
-            if startswith(label_key, "homepage.widget.")
-          ]) > 0 ? {
-            widget = {
-              for label_key, label_value in svc.labels : trimprefix(label_key, "homepage.widget.") => label_value
-              if startswith(label_key, "homepage.widget.")
-            }
-          } : {}
-        )
-      }
-      if svc.target != service.target && lookup(svc.labels, "homepage.group", "") == group && lookup(svc.labels, "homepage.name", "") != ""
-    ]
-  }
+    for group in sort(distinct([
+      for candidate in values(services) : candidate.labels["homepage.group"]
+      if candidate.target != service.target && lookup(candidate.labels, "homepage.group", "") != "" && lookup(candidate.labels, "homepage.name", "") != ""
+    ])) : {
+      (group) = [
+        for service_key in [
+          for service_sort_key in sort([
+            for candidate_key, candidate in services : join("|", [
+              format("%09d", 100000 + tonumber(lookup(candidate.labels, "homepage.weight", "0"))),
+              lower(lookup(candidate.labels, "homepage.name", "")),
+              candidate_key,
+            ])
+            if candidate.target != service.target && lookup(candidate.labels, "homepage.group", "") == group && lookup(candidate.labels, "homepage.name", "") != ""
+          ]) : split("|", service_sort_key)[2]
+        ] : {
+          (services[service_key].labels["homepage.name"]) = merge(
+            {
+              for label_key, label_value in services[service_key].labels : trimprefix(label_key, "homepage.") => label_value
+              if startswith(label_key, "homepage.") && !contains(["homepage.group", "homepage.name", "homepage.weight"], label_key) && !startswith(label_key, "homepage.widget.")
+            },
+            contains(keys(services[service_key].labels), "homepage.widget.type") ? {
+              widget = {
+                for label_key, label_value in services[service_key].labels : trimprefix(label_key, "homepage.widget.") => label_value
+                if startswith(label_key, "homepage.widget.")
+              }
+            } : {}
+          )
+        }
+      ]
+    }
   ],
   [
     for group in sort(distinct([

@@ -6,7 +6,7 @@ features:
   tailscale: true
 identity:
   description: Health Monitoring & Status Page
-  group: System
+  group: Infrastructure
   name: gatus
   service: gatus
   title: Gatus

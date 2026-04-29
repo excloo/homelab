@@ -1,10 +1,11 @@
 ${yamlencode(merge(
-  service.networking.port != null || length(service.platform_config.docker.labels) > 0 ? {
+  (service.networking.port != null || length(service.platform_config.docker.labels) > 0) && lookup(service.platform_config.docker.labels, "homelab.homepage.enabled", true) ? {
     "homepage.description" = service.identity.description
     "homepage.group"       = service.identity.group
     "homepage.href"        = service.fqdn_internal != null ? "https://${service.fqdn_internal}" : service.fqdn_external != null ? "https://${service.fqdn_external}" : service.networking.urls[0]
     "homepage.icon"        = service.identity.name
     "homepage.name"        = service.identity.title
+    "homepage.weight"      = contains(keys(service.platform_config.docker.labels), "homepage.widget.type") ? "-10" : "0"
   } : {},
   service.networking.port != null ? merge(
     {

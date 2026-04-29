@@ -10,3 +10,7 @@ identity:
 networking:
   port: 30054
   scheme: http
+platform_config:
+  docker:
+    labels:
+      homelab.homepage.enabled: false

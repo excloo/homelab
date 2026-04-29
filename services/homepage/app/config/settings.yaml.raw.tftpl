@@ -5,18 +5,18 @@ ${yamlencode({
     {
       for group in sort(distinct([
         for svc in values(services) : svc.labels["homepage.group"]
-        if lookup(svc.labels, "homepage.group", "") != "" && lookup(svc.labels, "homepage.name", "") != ""
+        if svc.target != service.target && lookup(svc.labels, "homepage.group", "") != "" && lookup(svc.labels, "homepage.name", "") != ""
       ])) : group => {
-        columns = 4
+        columns = 2
         style   = "row"
-        tab     = "Services"
+        tab     = contains([for server in values(servers) : server.description], group) ? "Servers" : "Services"
       }
     },
     {
       for group in sort(distinct([
         for server in values(servers) : server.type == "router" ? "Routers" : server.type == "vm" ? "VMs" : server.type == "appliance" ? "Appliances" : "Servers"
       ])) : group => {
-        columns = 4
+        columns = 2
         style   = "row"
         tab     = "Servers"
       }
