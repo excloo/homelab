@@ -1,7 +1,7 @@
 headerStyle: clean
 title: ${service.identity.title}
 layout:
-${indent(2, yamlencode(merge(
+${indent(2, trimspace(yamlencode(merge(
   {
   for group in sort(distinct([
     for svc in values(services) : svc.labels["homepage.group"]
@@ -21,4 +21,4 @@ ${indent(2, yamlencode(merge(
       tab     = "Servers"
     }
   }
-)))}
+))))}
