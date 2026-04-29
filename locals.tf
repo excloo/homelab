@@ -23,7 +23,6 @@ output "summary" {
       services    = length(local.services_model_desired)
     }
 
-    defaults = local.defaults
     servers  = keys(local.servers_model_desired)
     services = keys(local.services_model_desired)
 
