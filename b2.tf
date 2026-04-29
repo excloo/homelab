@@ -15,7 +15,7 @@ locals {
 }
 
 resource "b2_application_key" "server" {
-  for_each = local.local.servers_outputs_by_feature.b2
+  for_each = local.servers_outputs_by_feature.b2
 
   bucket_id    = b2_bucket.server[each.key].id
   capabilities = local.b2_application_key_capabilities
@@ -23,7 +23,7 @@ resource "b2_application_key" "server" {
 }
 
 resource "b2_application_key" "service" {
-  for_each = local.local.services_outputs_by_feature.b2
+  for_each = local.services_outputs_by_feature.b2
 
   bucket_id    = b2_bucket.service[each.key].id
   capabilities = local.b2_application_key_capabilities
@@ -31,7 +31,7 @@ resource "b2_application_key" "service" {
 }
 
 resource "b2_bucket" "server" {
-  for_each = local.local.servers_outputs_by_feature.b2
+  for_each = local.servers_outputs_by_feature.b2
 
   # B2 bucket names are global, so a stable random suffix is part of identity.
   bucket_name = "${each.key}-${random_string.b2_server[each.key].result}"
@@ -49,7 +49,7 @@ resource "b2_bucket" "server" {
 }
 
 resource "b2_bucket" "service" {
-  for_each = local.local.services_outputs_by_feature.b2
+  for_each = local.services_outputs_by_feature.b2
 
   # Service buckets use the expanded service-target key plus a stable suffix.
   bucket_name = "${each.key}-${random_string.b2_service[each.key].result}"
