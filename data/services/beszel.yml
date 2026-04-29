@@ -3,6 +3,7 @@ deploy_to:
   - au-truenas
 features:
   password: true
+  resend: true
 identity:
   description: System Monitoring
   group: Infrastructure

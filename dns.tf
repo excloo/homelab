@@ -3,15 +3,15 @@ locals {
   # ACME zone, so one scoped Cloudflare token can satisfy DNS-01 clients.
   dns_records_acme_delegation = {
     for record in distinct([
-      for r in concat(
+      for source_record in concat(
         values(local.dns_records_manual),
         values(local.dns_records_servers),
         values(local.dns_records_services_urls)
         ) : {
-        name = r.name
-        zone = r.zone
+        name = source_record.name
+        zone = source_record.zone
       }
-      if contains(["A", "AAAA", "CNAME"], r.type)
+      if contains(["A", "AAAA", "CNAME"], source_record.type)
       ]) : "${record.zone}-${record.name}-acme-delegation" => {
       content = "${record.name}.${local.defaults.domains.acme}"
       name    = "_acme-challenge.${record.name}"
@@ -40,9 +40,9 @@ locals {
   # Server records combine explicit public addresses, OCI-assigned addresses, and
   # Tailscale device lookups into external/internal DNS records.
   dns_records_servers = merge([
-    for k, server in local.servers_model_desired : merge(
+    for server_key, server in local.servers_model_desired : merge(
       server.public_address != null ? {
-        "${local.defaults.domains.external}-${k}-cname" = {
+        "${local.defaults.domains.external}-${server_key}-cname" = {
           content = server.public_address
           name    = "${server.fqdn}.${local.defaults.domains.external}"
           proxied = server.features.cloudflare_proxy
@@ -51,15 +51,15 @@ locals {
         }
       } : {},
       server.platform == "oci" ? {
-        "${local.defaults.domains.external}-${k}-a" = {
-          content = data.oci_core_vnic.server[k].public_ip_address
+        "${local.defaults.domains.external}-${server_key}-a" = {
+          content = data.oci_core_vnic.server[server_key].public_ip_address
           name    = "${server.fqdn}.${local.defaults.domains.external}"
           proxied = server.features.cloudflare_proxy
           type    = "A"
           zone    = local.defaults.domains.external
         }
-        "${local.defaults.domains.external}-${k}-aaaa" = {
-          content = data.oci_core_vnic.server[k].ipv6addresses[0]
+        "${local.defaults.domains.external}-${server_key}-aaaa" = {
+          content = data.oci_core_vnic.server[server_key].ipv6addresses[0]
           name    = "${server.fqdn}.${local.defaults.domains.external}"
           proxied = server.features.cloudflare_proxy
           type    = "AAAA"
@@ -67,7 +67,7 @@ locals {
         }
       } : {},
       server.public_ipv4 != null && server.platform != "oci" ? {
-        "${local.defaults.domains.external}-${k}-a" = {
+        "${local.defaults.domains.external}-${server_key}-a" = {
           content = server.public_ipv4
           name    = "${server.fqdn}.${local.defaults.domains.external}"
           proxied = server.features.cloudflare_proxy
@@ -76,7 +76,7 @@ locals {
         }
       } : {},
       server.public_ipv6 != null && server.platform != "oci" ? {
-        "${local.defaults.domains.external}-${k}-aaaa" = {
+        "${local.defaults.domains.external}-${server_key}-aaaa" = {
           content = server.public_ipv6
           name    = "${server.fqdn}.${local.defaults.domains.external}"
           proxied = server.features.cloudflare_proxy
@@ -84,18 +84,18 @@ locals {
           zone    = local.defaults.domains.external
         }
       } : {},
-      local.servers_model_runtime[k].tailscale_ipv4 != null ? {
-        "${local.defaults.domains.internal}-${k}-a" = {
-          content = local.servers_model_runtime[k].tailscale_ipv4
+      local.servers_model_runtime[server_key].tailscale_ipv4 != null ? {
+        "${local.defaults.domains.internal}-${server_key}-a" = {
+          content = local.servers_model_runtime[server_key].tailscale_ipv4
           name    = "${server.fqdn}.${local.defaults.domains.internal}"
           proxied = false
           type    = "A"
           zone    = local.defaults.domains.internal
         }
       } : {},
-      local.servers_model_runtime[k].tailscale_ipv6 != null ? {
-        "${local.defaults.domains.internal}-${k}-aaaa" = {
-          content = local.servers_model_runtime[k].tailscale_ipv6
+      local.servers_model_runtime[server_key].tailscale_ipv6 != null ? {
+        "${local.defaults.domains.internal}-${server_key}-aaaa" = {
+          content = local.servers_model_runtime[server_key].tailscale_ipv6
           name    = "${server.fqdn}.${local.defaults.domains.internal}"
           proxied = false
           type    = "AAAA"
@@ -107,7 +107,7 @@ locals {
 
   # Server-hosted Cloudflare services point at the target server's tunnel.
   dns_records_services = {
-    for k, service in local.services_model_desired : "${local.defaults.domains.external}-${k}" => provider::deepmerge::mergo(
+    for service_key, service in local.services_model_desired : "${local.defaults.domains.external}-${service_key}" => provider::deepmerge::mergo(
       local.defaults_dns,
       {
         content = "${cloudflare_zero_trust_tunnel_cloudflared.server[service.target].id}.cfargotunnel.com"
@@ -125,9 +125,9 @@ locals {
   # Fly services get records for custom URLs; fly.dev hostnames are exposed as
   # computed service FQDNs and served directly by Fly.
   dns_records_services_fly = merge(flatten([
-    for k, service in local.fly_input_services : [
-      for i, url in service.networking.urls : {
-        "${k}-url-${i}" = provider::deepmerge::mergo(
+    for service_key, service in local.fly_input_services : [
+      for url_index, url in service.networking.urls : {
+        "${service_key}-url-${url_index}" = provider::deepmerge::mergo(
           local.defaults_dns,
           {
             content = "${service.platform_config.fly.app_name}.fly.dev"
@@ -145,9 +145,9 @@ locals {
   # Custom service URLs resolve to a tunnel when exposed through Cloudflare,
   # otherwise to the service's computed external or internal hostname.
   dns_records_services_urls = merge(flatten([
-    for k, service in local.services_model_desired : [
-      for i, url in service.networking.urls : {
-        "${k}-url-${i}" = provider::deepmerge::mergo(
+    for service_key, service in local.services_model_desired : [
+      for url_index, url in service.networking.urls : {
+        "${service_key}-url-${url_index}" = provider::deepmerge::mergo(
           local.defaults_dns,
           {
             content = (
@@ -199,9 +199,9 @@ locals {
   # choose the most specific Cloudflare zone.
   dns_zones_urls = {
     for url in distinct(flatten([
-      for k, service in local.services_model_desired : service.networking.urls
+      for service_key, service in local.services_model_desired : service.networking.urls
       ])) : url => try(
-      split(":", reverse(sort([for z in local.dns_zones : format("%04d:%s", length(z), z) if url == z || endswith(url, ".${z}")]))[0])[1],
+      split(":", reverse(sort([for zone in local.dns_zones : format("%04d:%s", length(zone), zone) if url == zone || endswith(url, ".${zone}")]))[0])[1],
       null
     )
   }

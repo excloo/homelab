@@ -1,9 +1,7 @@
 services:
   redlib:
     environment:
-%{ for key in sort(nonsensitive(keys(env))) ~}
-      ${key}: ${jsonencode(env[key])}
-%{ endfor ~}
+      ${indent(6, yamlencode(env))}
     healthcheck:
       disable: true
     image: ghcr.io/silvenga/redlib:latest

@@ -85,12 +85,12 @@ servers:
         - 80
         - 443
 services:
+  deploy_to: []
   fqdn_external: null
   fqdn_internal: null
   password_hash_sensitive: null
   password_sensitive: null
   target: null
-  deploy_to: []
   features:
     b2: false
     monitoring: true
@@ -100,6 +100,8 @@ services:
     resend: false
     secrets: []
     tailscale: false
+  imports:
+    services: {}
   identity:
     description: ""
     group: null
@@ -130,8 +132,6 @@ services:
       port_key: web_port
       train: community
       containers: []
-  references:
-    services: {}
 system:
   locale: en_AU
   shell: /bin/bash

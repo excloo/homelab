@@ -8,6 +8,8 @@ features:
     - length: 32
       name: db_password
       type: alphanumeric
+    - name: homepage_widget_key
+      type: external
     - length: 32
       name: meilisearch_master_key
       type: alphanumeric

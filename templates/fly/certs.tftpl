@@ -1,3 +1,1 @@
-%{ for url in service.networking.urls ~}
-${url}
-%{ endfor ~}
+${join("\n", service.networking.urls)}

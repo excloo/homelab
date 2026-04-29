@@ -64,7 +64,7 @@ Rendered plaintext can be written locally for debugging by setting `TF_VAR_debug
 
 Credentials fall into two groups:
 
-- Mandatory credentials are required for normal operation of this stack: Bitwarden, Cloudflare, GitHub, OpenTofu Cloud, and Tailscale.
+- Mandatory credentials are required for normal operation of this stack: Bitwarden, Cloudflare, GitHub, Terraform Cloud, and Tailscale.
 - Optional credentials are required only when the corresponding data enables those resources: B2, Incus, OCI, Resend, and UniFi.
 
 Feature flags either create provider-backed resources, expose values generated locally by OpenTofu, or control rendered config. `password` is local-only, while `monitoring` and `monitoring_alerts` only control generated Gatus checks and alerts. `b2`, `resend`, and `tailscale` call providers when enabled. Resend uses the generic REST API provider with `TF_VAR_resend_api_key` because this repo does not use a native Resend provider. Pushover has no provider-managed resource here, so `TF_VAR_pushover_application_token` and `TF_VAR_pushover_user_key` are pass-through values rendered into service config when `features.pushover` is enabled.
@@ -82,7 +82,7 @@ Feature flags either create provider-backed resources, expose values generated l
 1. Create `data/services/<key>.yml` following `schemas/service.json`
 2. Fill in `deploy_to`, `features`, `identity`, `networking`
 3. For Fly.io deployments, optionally set `platform_config.fly.app_name`; otherwise it defaults to `<org>-<service>` and the Fly hostname is added to computed service URLs
-4. Optionally add deploy artifacts under `services/<identity.name>/`; use `.tftpl` for files that need OpenTofu template rendering
+4. Optionally add deploy artifacts under `services/<identity.service>/`; use `.tftpl` for files that need OpenTofu template rendering and `.raw.tftpl` for rendered files that must be encrypted as binary
 5. Run `mise run plan` to review, `mise run apply` to provision
 
 ## Commands
@@ -106,7 +106,11 @@ All generated credentials are stored automatically in **Bitwarden** in two colle
 - **Servers** — one login entry per server; all generated fields (passwords, API keys, IPs, FQDNs, tunnel tokens) stored as custom fields
 - **Services** — one login entry per service deployment with the same pattern
 
-Provided or externally generated secrets can live in `data/secrets.sops.yml`. The file is encrypted with SOPS/age in Git and read during OpenTofu runs. Keys under `servers.<server>`, `services.<service>`, or `services.<service-target>` are exposed as `{key}_sensitive` in templates.
+Provided or externally generated secrets can live in `data/secrets.sops.yml`. The file is encrypted with SOPS/age in Git and read during OpenTofu runs. Server keys under `servers.<server>` are exposed as `{key}_sensitive`; service keys are declared in `features.secrets` with `type: external`, then declared keys under `services.<identity.name>` or `services.<service-target>` are exposed as `{key}_sensitive` in templates.
+
+Services can access another service's private fields only by declaring an `imports.services` alias. The normal `services` map remains public inventory, and declared private imports are overlaid by alias as `services.<alias>`.
+
+Rendered sidecar files named `*.raw.tftpl` are templated, encrypted as binary, and deployed without the `.raw` segment. Use this for files where SOPS structured YAML/JSON encryption is unsuitable, such as top-level YAML arrays.
 
 ```yaml
 servers:

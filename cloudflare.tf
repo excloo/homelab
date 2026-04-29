@@ -19,10 +19,10 @@ data "cloudflare_account_api_token_permission_groups_list" "tunnel_read" {
 }
 
 data "cloudflare_zero_trust_tunnel_cloudflared_token" "server" {
-  for_each = cloudflare_zero_trust_tunnel_cloudflared.server
+  for_each = local.servers_outputs_by_feature.cloudflare_zero_trust_tunnel
 
   account_id = data.cloudflare_account.default.id
-  tunnel_id  = each.value.id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.server[each.key].id
 }
 
 data "cloudflare_zone" "all" {
@@ -34,7 +34,7 @@ data "cloudflare_zone" "all" {
 }
 
 resource "cloudflare_account_token" "server_acme" {
-  for_each = local.servers_output_by_feature.cloudflare_acme_token
+  for_each = local.servers_outputs_by_feature.cloudflare_acme_token
 
   account_id = data.cloudflare_account.default.id
   name       = each.key
@@ -55,7 +55,7 @@ resource "cloudflare_account_token" "server_acme" {
 }
 
 resource "cloudflare_account_token" "server_tunnel_read" {
-  for_each = local.servers_output_by_feature.cloudflare_zero_trust_tunnel
+  for_each = local.servers_outputs_by_feature.cloudflare_zero_trust_tunnel
 
   account_id = data.cloudflare_account.default.id
   name       = "${each.key}-tunnel-read"
@@ -161,7 +161,7 @@ resource "cloudflare_dns_record" "wildcard" {
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared" "server" {
-  for_each = local.servers_output_by_feature.cloudflare_zero_trust_tunnel
+  for_each = local.servers_outputs_by_feature.cloudflare_zero_trust_tunnel
 
   account_id = data.cloudflare_account.default.id
   config_src = "cloudflare"

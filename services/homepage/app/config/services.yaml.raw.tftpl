@@ -1,0 +1,46 @@
+${yamlencode(concat(
+  [
+  for group in sort(distinct([
+    for svc in values(services) : svc.labels["homepage.group"]
+    if svc.target != service.target && lookup(svc.labels, "homepage.group", "") != "" && lookup(svc.labels, "homepage.name", "") != ""
+  ])) : {
+    (group) = [
+      for svc in values(services) : {
+        (svc.labels["homepage.name"]) = merge(
+          {
+            for label_key, label_value in svc.labels : trimprefix(label_key, "homepage.") => label_value
+            if startswith(label_key, "homepage.") && !contains(["homepage.group", "homepage.name"], label_key) && !startswith(label_key, "homepage.widget.")
+          },
+          length([
+            for label_key in keys(svc.labels) : label_key
+            if startswith(label_key, "homepage.widget.")
+          ]) > 0 ? {
+            widget = {
+              for label_key, label_value in svc.labels : trimprefix(label_key, "homepage.widget.") => label_value
+              if startswith(label_key, "homepage.widget.")
+            }
+          } : {}
+        )
+      }
+      if svc.target != service.target && lookup(svc.labels, "homepage.group", "") == group && lookup(svc.labels, "homepage.name", "") != ""
+    ]
+  }
+  ],
+  [
+    for group in sort(distinct([
+      for server in values(servers) : server.type == "router" ? "Routers" : server.type == "vm" ? "VMs" : server.type == "appliance" ? "Appliances" : "Servers"
+    ])) : {
+      (group) = [
+        for k, server in servers : {
+          (server.description) = {
+            description = server.platform
+            href        = "https://${server.fqdn_internal}"
+            icon        = server.type == "router" ? "mdi-router-network" : server.type == "vm" ? "mdi-desktop-tower-monitor" : server.type == "appliance" ? "mdi-devices" : "mdi-server"
+            ping        = server.fqdn_internal
+          }
+        }
+        if (server.type == "router" ? "Routers" : server.type == "vm" ? "VMs" : server.type == "appliance" ? "Appliances" : "Servers") == group
+      ]
+    }
+  ]
+))}

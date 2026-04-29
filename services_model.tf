@@ -1,0 +1,70 @@
+locals {
+  # Desired service model: expanded deployment target data plus deterministic
+  # names, URLs, and server FQDNs. Runtime credentials are added separately.
+  services_model_desired = {
+    for service_key, service in local.services_input_targets : service_key => provider::deepmerge::mergo(
+      service,
+      {
+        for url_index, url in service.networking.urls : "url_${url_index}" => url
+      },
+      {
+        fqdn_external = service.target == "fly" ? "${coalesce(service.platform_config.fly.app_name, "${local.defaults.organization.name}-${service.identity.name}")}.fly.dev" : contains(keys(local.servers_model_desired), service.target) && contains(["cloudflare", "external"], service.networking.expose) ? "${service.identity.name}.${local.servers_model_desired[service.target].fqdn_external}" : service.fqdn_external
+        fqdn_internal = contains(keys(local.servers_model_desired), service.target) ? "${service.identity.name}.${local.servers_model_desired[service.target].fqdn_internal}" : service.fqdn_internal
+
+        identity = {
+          group = service.identity.group != null ? service.identity.group : contains(keys(local.servers_model_desired), service.target) ? local.servers_model_desired[service.target].description : "Applications"
+        }
+
+        platform_config = {
+          fly = {
+            app_name = service.target == "fly" ? coalesce(service.platform_config.fly.app_name, "${local.defaults.organization.name}-${service.identity.name}") : service.platform_config.fly.app_name
+          }
+        }
+      }
+    )
+  }
+
+  # Runtime service model: generated credentials and provider-backed values.
+  # Keeping this separate makes secret dependencies easier to spot.
+  services_model_runtime = {
+    for service_key, service in local.services_input_targets : service_key => merge(
+      {
+        for secret in service.features.secrets : "${secret.name}_sensitive" => sensitive(
+          try(local._secrets.services[service_key][secret.name], local._secrets.services[service.identity.name][secret.name])
+        )
+        if secret.type == "external" && can(try(local._secrets.services[service_key][secret.name], local._secrets.services[service.identity.name][secret.name]))
+      },
+      service.features.b2 ? {
+        b2_application_key_id        = b2_application_key.service[service_key].application_key_id
+        b2_application_key_sensitive = b2_application_key.service[service_key].application_key
+        b2_bucket_name               = b2_bucket.service[service_key].bucket_name
+        b2_endpoint                  = replace(data.b2_account_info.default.s3_api_url, "https://", "")
+      } : {},
+      service.features.password ? {
+        password_hash_sensitive = bcrypt_hash.service[service_key].id
+        password_sensitive      = random_password.service[service_key].result
+      } : {},
+      service.features.pushover ? {
+        pushover_application_token_sensitive = var.pushover_application_token
+        pushover_user_key_sensitive          = var.pushover_user_key
+      } : {},
+      service.features.resend ? {
+        resend_api_key_sensitive = jsondecode(restapi_object.resend_api_key_service[service_key].create_response).token
+      } : {},
+      {
+        for secret in service.features.secrets : "${secret.name}_sensitive" => (
+          contains(["hex", "base64"], secret.type) ? (
+            secret.type == "hex" ?
+            random_id.service_secret["${service_key}-${secret.name}"].hex :
+            random_id.service_secret["${service_key}-${secret.name}"].b64_std
+          ) :
+          random_password.service_secret["${service_key}-${secret.name}"].result
+        )
+        if secret.type != "external"
+      },
+      service.features.tailscale ? {
+        tailscale_auth_key_sensitive = tailscale_tailnet_key.service[service_key].key
+      } : {}
+    )
+  }
+}

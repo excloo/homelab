@@ -1,30 +1,36 @@
 # yaml-language-server: $schema=../../schemas/service.json
 deploy_to:
   - au-truenas
+features:
+  secrets:
+    - name: system_id
+      type: external
+    - name: token
+      type: external
 identity:
   description: Resource Monitoring Agent
   name: beszel-agent
   service: beszel-agent
   title: Beszel Agent
+imports:
+  services:
+    beszel: beszel-${service.target}
 platform_config:
   docker:
     env:
-      HUB_URL: http://localhost:30333
+      HUB_URL: http://localhost:${services.beszel.networking.port}
       KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPkxnKuxsVqSVZVXQ3OGHjZZFMAAclU/xLrEDdwOyRt+
       LISTEN: 45876
       TOKEN: ${service.token_sensitive}
     labels:
-      homepage.description: ${refs.services.beszel.identity.description}
-      homepage.href: https://${refs.services.beszel.fqdn_internal}/system/${service.system_id_sensitive}
-      homepage.icon: ${refs.services.beszel.identity.name}
-      homepage.name: ${refs.services.beszel.identity.title}
+      homepage.description: ${services.beszel.identity.description}
+      homepage.href: https://${services.beszel.fqdn_internal}/system/${service.system_id_sensitive}
+      homepage.icon: ${services.beszel.identity.name}
+      homepage.name: ${services.beszel.identity.title}
       homepage.widget.fields: ${jsonencode(split(",", "status,cpu,memory,network"))}
-      homepage.widget.password: ${refs.services.beszel.password_sensitive}
+      homepage.widget.password: ${services.beszel.password_sensitive}
       homepage.widget.systemId: ${service.system_id_sensitive}
       homepage.widget.type: beszel
-      homepage.widget.url: https://${refs.services.beszel.fqdn_internal}
+      homepage.widget.url: https://${services.beszel.fqdn_internal}
       homepage.widget.username: ${defaults.organization.email}
       homepage.widget.version: "2"
-references:
-  services:
-    beszel: beszel-${service.target}

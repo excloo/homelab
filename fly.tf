@@ -1,49 +1,49 @@
 locals {
   # Expanded services whose deployment target is Fly.io.
   fly_input_services = {
-    for k, v in local.services_model_desired : k => v
-    if v.target == "fly"
+    for service_key, service in local.services_model_desired : service_key => service
+    if service.target == "fly"
   }
 
   # GitHub files written to the Fly deployment repository. File keys include
   # the service directory so multiple Fly services can share one repo.
   fly_render_files = merge(
     {
-      for k, v in local.fly_input_services : "${v.platform_config.fly.app_name}/fly.toml" => {
+      for service_key, service in local.fly_input_services : "${service.platform_config.fly.app_name}/fly.toml" => {
         age_public_key = age_secret_key.fly.public_key
-        commit_message = "Update ${v.platform_config.fly.app_name} configuration"
-        content_base64 = sensitive(base64encode(templatefile("${path.module}/templates/fly/fly.toml.tftpl", local.services_render_vars[k])))
+        commit_message = "Update ${service.platform_config.fly.app_name} configuration"
+        content_base64 = sensitive(base64encode(templatefile("${path.module}/templates/fly/fly.toml.tftpl", local.services_render_context_vars[service_key])))
         content_type   = "binary"
-        file           = "${v.platform_config.fly.app_name}/fly.toml"
+        file           = "${service.platform_config.fly.app_name}/fly.toml"
       }
     },
     {
-      for k, v in local.fly_input_services : "${v.platform_config.fly.app_name}/.certs" => {
+      for service_key, service in local.fly_input_services : "${service.platform_config.fly.app_name}/.certs" => {
         age_public_key = age_secret_key.fly.public_key
-        commit_message = "Update ${v.platform_config.fly.app_name} certificate hostnames"
-        content_base64 = base64encode(templatefile("${path.module}/templates/fly/certs.tftpl", local.services_render_vars[k]))
+        commit_message = "Update ${service.platform_config.fly.app_name} certificate hostnames"
+        content_base64 = base64encode(templatefile("${path.module}/templates/fly/certs.tftpl", local.services_render_context_vars[service_key]))
         content_type   = "binary"
-        file           = "${v.platform_config.fly.app_name}/.certs"
+        file           = "${service.platform_config.fly.app_name}/.certs"
       }
-      if length(v.networking.urls) > 0
+      if length(service.networking.urls) > 0
     },
     {
-      for k, v in local.fly_input_services : "${v.platform_config.fly.app_name}/.machine-count" => {
+      for service_key, service in local.fly_input_services : "${service.platform_config.fly.app_name}/.machine-count" => {
         age_public_key = age_secret_key.fly.public_key
-        commit_message = "Update ${v.platform_config.fly.app_name} machine count"
-        content_base64 = base64encode("${v.platform_config.fly.machine_count}\n")
+        commit_message = "Update ${service.platform_config.fly.app_name} machine count"
+        content_base64 = base64encode("${service.platform_config.fly.machine_count}\n")
         content_type   = "binary"
-        file           = "${v.platform_config.fly.app_name}/.machine-count"
+        file           = "${service.platform_config.fly.app_name}/.machine-count"
       }
-      if v.platform_config.fly.machine_count != null
+      if service.platform_config.fly.machine_count != null
     },
     {
-      for k, v in local.services_rendered_files : "${local.fly_input_services[v.stack].platform_config.fly.app_name}/${v.rel_path}" => merge(v, {
+      for file_key, file_config in local.services_render_files_sidecars : "${local.fly_input_services[file_config.stack].platform_config.fly.app_name}/${file_config.rel_path}" => merge(file_config, {
         age_public_key = age_secret_key.fly.public_key
-        commit_message = "Update ${v.stack} ${v.rel_path}"
-        file           = "${local.fly_input_services[v.stack].platform_config.fly.app_name}/${v.rel_path}"
+        commit_message = "Update ${file_config.stack} ${file_config.rel_path}"
+        file           = "${local.fly_input_services[file_config.stack].platform_config.fly.app_name}/${file_config.rel_path}"
       })
-      if v.target == "fly"
+      if file_config.target == "fly"
     }
   )
 }

@@ -2,31 +2,31 @@ locals {
   # Komodo only receives services with a rendered compose file on Docker-capable
   # server targets.
   komodo_input_stacks = {
-    for k, v in local.services_model_desired : k => v
-    if contains(keys(local.servers_model_desired), v.target) &&
-    local.servers_model_desired[v.target].features.docker &&
-    contains(keys(local.services_rendered_compose), k)
+    for service_key, service in local.services_model_desired : service_key => service
+    if contains(keys(local.servers_model_desired), service.target) &&
+    local.servers_model_desired[service.target].features.docker &&
+    contains(keys(local.services_render_files_compose), service_key)
   }
 
   # Encrypted GitHub files consumed by Komodo ResourceSync. Service sidecar files
   # reuse the same relative paths as the service artifact model.
   komodo_render_files = merge(
     {
-      for k, v in local.komodo_input_stacks : "${k}/compose.yaml" => {
-        age_public_key = age_secret_key.server[v.target].public_key
-        commit_message = "Update ${k} compose"
-        content_base64 = sensitive(base64encode(local.services_rendered_compose[k]))
+      for stack_key, stack in local.komodo_input_stacks : "${stack_key}/compose.yaml" => {
+        age_public_key = age_secret_key.server[stack.target].public_key
+        commit_message = "Update ${stack_key} compose"
+        content_base64 = sensitive(base64encode(local.services_render_files_compose[stack_key]))
         content_type   = "yaml"
-        file           = "${k}/compose.yaml"
+        file           = "${stack_key}/compose.yaml"
       }
     },
     {
-      for k, v in local.services_rendered_files : k => merge(v, {
-        age_public_key = age_secret_key.server[v.target].public_key
-        commit_message = "Update ${v.stack} ${v.rel_path}"
-        file           = k
+      for file_key, file_config in local.services_render_files_sidecars : file_key => merge(file_config, {
+        age_public_key = age_secret_key.server[file_config.target].public_key
+        commit_message = "Update ${file_config.stack} ${file_config.rel_path}"
+        file           = file_key
       })
-      if contains(keys(local.servers_model_desired), v.target) && local.servers_model_desired[v.target].features.docker
+      if contains(keys(local.servers_model_desired), file_config.target) && local.servers_model_desired[file_config.target].features.docker
     }
   )
 }
@@ -65,7 +65,7 @@ resource "github_repository_file" "komodo_sops_config" {
 
   content = join("\n", concat(
     ["creation_rules:"],
-    [for k, v in local.komodo_input_stacks : "  - path_regex: '^${k}/'\n    age: ${age_secret_key.server[v.target].public_key}"]
+    [for stack_key, stack in local.komodo_input_stacks : "  - path_regex: '^${stack_key}/'\n    age: ${age_secret_key.server[stack.target].public_key}"]
   ))
 }
 

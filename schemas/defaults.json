@@ -1,205 +1,209 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Defaults",
-  "description": "Global configuration and default values merged into all server and service definitions.",
-  "type": "object",
-  "required": ["organization", "domains", "system"],
   "additionalProperties": false,
+  "description": "Global configuration and default values merged into all server and service definitions.",
+  "required": ["organization", "domains", "system"],
+  "title": "Defaults",
+  "type": "object",
   "properties": {
     "bitwarden": {
-      "type": "object",
-      "description": "Bitwarden/Vaultwarden integration settings for storing generated credentials.",
       "additionalProperties": false,
+      "description": "Bitwarden/Vaultwarden integration settings for storing generated credentials.",
+      "type": "object",
       "properties": {
-        "organization": {
-          "type": "string",
-          "description": "Bitwarden organisation name to look up and file items under."
-        },
-        "url_field_pattern": {
-          "type": "string",
-          "description": "Regex matching server/service field names to store as Bitwarden URI entries rather than custom fields (e.g. fields containing IP addresses, FQDNs, or URLs)."
-        },
         "collections": {
-          "type": "object",
-          "description": "Bitwarden organisation collection names to file credentials into.",
           "additionalProperties": false,
+          "description": "Bitwarden organisation collection names to file credentials into.",
+          "type": "object",
           "properties": {
             "servers": {
-              "type": "string",
-              "description": "Collection name for server credentials."
+              "description": "Collection name for server credentials.",
+              "type": "string"
             },
             "services": {
-              "type": "string",
-              "description": "Collection name for service credentials."
+              "description": "Collection name for service credentials.",
+              "type": "string"
             }
           }
+        },
+        "organization": {
+          "description": "Bitwarden organisation name to look up and file items under.",
+          "type": "string"
+        },
+        "url_field_pattern": {
+          "description": "Regex matching server/service field names to store as Bitwarden URI entries rather than custom fields (e.g. fields containing IP addresses, FQDNs, or URLs).",
+          "type": "string"
         }
       }
     },
     "cloudflare": {
-      "type": "object",
-      "description": "Cloudflare account settings used for account-scoped resources.",
       "additionalProperties": false,
+      "description": "Cloudflare account settings used for account-scoped resources.",
+      "type": "object",
       "properties": {
         "account_name": {
-          "type": "string",
-          "description": "Cloudflare account name to look up for account-scoped resources."
+          "description": "Cloudflare account name to look up for account-scoped resources.",
+          "type": "string"
         }
       }
     },
     "dns": {
-      "type": "object",
-      "description": "Default values merged into all auto-generated DNS records. Individual records may override these.",
       "additionalProperties": false,
+      "description": "Default values merged into all auto-generated DNS records. Individual records may override these.",
+      "type": "object",
       "properties": {
         "priority": {
-          "type": ["integer", "null"],
-          "description": "Default MX/SRV record priority. Null omits the field for non-priority record types."
+          "description": "Default MX/SRV record priority. Null omits the field for non-priority record types.",
+          "type": ["integer", "null"]
         },
         "proxied": {
-          "type": "boolean",
-          "description": "Whether to proxy records through Cloudflare by default. Individual service records override this based on their networking.expose setting."
+          "description": "Whether to proxy records through Cloudflare by default. Individual service records override this based on their networking.expose setting.",
+          "type": "boolean"
         },
         "ttl": {
-          "type": "integer",
-          "description": "Default DNS TTL in seconds. Use 1 for Cloudflare's automatic TTL."
+          "description": "Default DNS TTL in seconds. Use 1 for Cloudflare's automatic TTL.",
+          "type": "integer"
         },
         "wildcard": {
-          "type": "boolean",
-          "description": "Whether to create a wildcard CNAME (*.hostname → hostname) alongside each auto-generated A/AAAA/CNAME record by default."
+          "description": "Whether to create a wildcard CNAME (*.hostname → hostname) alongside each auto-generated A/AAAA/CNAME record by default.",
+          "type": "boolean"
         }
       }
     },
     "domains": {
-      "type": "object",
+      "additionalProperties": false,
       "description": "Domain names used to construct server and service FQDNs.",
       "required": ["acme", "external", "internal"],
-      "additionalProperties": false,
+      "type": "object",
       "properties": {
         "acme": {
-          "type": "string",
-          "description": "Domain used for DNS-01 ACME challenge delegation. _acme-challenge CNAMEs on the external and internal domains point here, allowing a single token to issue certificates for all hostnames."
+          "description": "Domain used for DNS-01 ACME challenge delegation. _acme-challenge CNAMEs on the external and internal domains point here, allowing a single token to issue certificates for all hostnames.",
+          "type": "string"
         },
         "external": {
-          "type": "string",
-          "description": "Public-facing domain. Server FQDNs are {name}.{region}.{external}; service FQDNs are {service}.{server_fqdn}."
+          "description": "Public-facing domain. Server FQDNs are {name}.{region}.{external}; service FQDNs are {service}.{server_fqdn}.",
+          "type": "string"
         },
         "internal": {
-          "type": "string",
-          "description": "Internal Tailscale domain. Used for private service access via Tailscale IPs."
+          "description": "Internal Tailscale domain. Used for private service access via Tailscale IPs.",
+          "type": "string"
         }
       }
     },
     "github": {
-      "type": "object",
-      "description": "GitHub organisation and repository names used to push encrypted configuration files.",
       "additionalProperties": false,
+      "description": "GitHub organisation and repository names used to push encrypted configuration files.",
+      "type": "object",
       "properties": {
         "owner": {
-          "type": "string",
-          "description": "GitHub organisation or user that owns the deployment repositories."
+          "description": "GitHub organisation or user that owns the deployment repositories.",
+          "type": "string"
         },
         "repositories": {
-          "type": "object",
-          "description": "Names of the repositories that store deployment configurations for each platform.",
           "additionalProperties": false,
+          "description": "Names of the repositories that store deployment configurations for each platform.",
+          "type": "object",
           "properties": {
             "fly": {
-              "type": "string",
-              "description": "Repository for Fly.io service configs (fly.toml, .env, service templates). A GitHub Actions workflow deploys from here."
+              "description": "Repository for Fly.io service configs (fly.toml, .env, service templates). A GitHub Actions workflow deploys from here.",
+              "type": "string"
             },
             "komodo": {
-              "type": "string",
-              "description": "Repository for Komodo ResourceSync configs (stacks.toml, servers.toml, compose files). Komodo polls this repo."
+              "description": "Repository for Komodo ResourceSync configs (stacks.toml, servers.toml, compose files). Komodo polls this repo.",
+              "type": "string"
             },
             "truenas": {
-              "type": "string",
-              "description": "Repository for TrueNAS service configs (compose.json, app.json, service config files). A GitHub Actions workflow applies these."
+              "description": "Repository for TrueNAS service configs (compose.json, app.json, service config files). A GitHub Actions workflow applies these.",
+              "type": "string"
             }
           }
         }
       }
     },
     "organization": {
-      "type": "object",
+      "additionalProperties": false,
       "description": "Organisation-level metadata used across resources.",
       "required": ["name", "email"],
-      "additionalProperties": false,
+      "type": "object",
       "properties": {
         "email": {
-          "type": "string",
-          "description": "Primary contact email address. Used as the sender and recipient for alert emails (e.g. Gatus notifications via Resend)."
+          "description": "Primary contact email address. Used as the sender and recipient for alert emails (e.g. Gatus notifications via Resend).",
+          "type": "string"
         },
         "managed_comment": {
-          "type": "string",
-          "description": "Comment string attached to all Cloudflare DNS records to indicate they are managed by OpenTofu."
+          "description": "Comment string attached to all Cloudflare DNS records to indicate they are managed by OpenTofu.",
+          "type": "string"
         },
         "name": {
-          "type": "string",
-          "description": "Organisation short name used in resource display names and identifiers."
+          "description": "Organisation short name used in resource display names and identifiers.",
+          "type": "string"
         }
       }
     },
     "resend": {
-      "type": "object",
-      "description": "SMTP settings for the Resend email relay used by services that send alerts or notifications.",
       "additionalProperties": false,
+      "description": "SMTP settings for the Resend email relay used by services that send alerts or notifications.",
+      "type": "object",
       "properties": {
         "host": {
-          "type": "string",
-          "description": "SMTP server hostname (e.g. 'smtp.resend.com')."
+          "description": "SMTP server hostname (e.g. 'smtp.resend.com').",
+          "type": "string"
         },
         "port": {
-          "type": "integer",
-          "description": "SMTP port (e.g. 465 for implicit TLS, 587 for STARTTLS)."
+          "description": "SMTP port (e.g. 465 for implicit TLS, 587 for STARTTLS).",
+          "type": "integer"
         },
         "username": {
-          "type": "string",
-          "description": "SMTP username. Resend uses 'resend' as the fixed username; the API key is the password."
+          "description": "SMTP username. Resend uses 'resend' as the fixed username; the API key is the password.",
+          "type": "string"
         }
       }
     },
     "servers": {
-      "type": "object",
-      "description": "Default field values deep-merged into every server definition before processing. Keys mirror the server schema."
+      "description": "Default field values deep-merged into every server definition before processing. Keys mirror the server schema.",
+      "type": "object"
     },
     "services": {
-      "type": "object",
-      "description": "Default field values deep-merged into every service definition before processing. Keys mirror the service schema."
+      "description": "Default field values deep-merged into every service definition before processing. Keys mirror the service schema.",
+      "type": "object"
     },
     "system": {
-      "type": "object",
-      "description": "Default OS-level settings injected into cloud-init for provisioned servers.",
       "additionalProperties": false,
+      "description": "Default OS-level settings injected into cloud-init for provisioned servers.",
+      "type": "object",
       "properties": {
         "locale": {
-          "type": "string",
-          "description": "System locale (e.g. 'en_AU')."
+          "description": "System locale (e.g. 'en_AU').",
+          "type": "string"
         },
         "shell": {
-          "type": "string",
-          "description": "Default login shell path (e.g. '/bin/bash')."
+          "description": "Default login shell path (e.g. '/bin/bash').",
+          "type": "string"
         },
         "timezone": {
-          "type": "string",
-          "description": "System timezone in tz database format (e.g. 'Australia/Sydney')."
+          "description": "System timezone in tz database format (e.g. 'Australia/Sydney').",
+          "type": "string"
         }
       }
     },
     "tailscale": {
-      "type": "object",
-      "description": "Tailscale network configuration applied when provisioning Tailscale keys.",
       "additionalProperties": false,
+      "description": "Tailscale network configuration applied when provisioning Tailscale keys.",
+      "type": "object",
       "properties": {
         "admin_identities": {
+          "description": "Tailscale identity emails or passkey names granted admin access to the tailnet.",
           "type": "array",
-          "items": { "type": "string" },
-          "description": "Tailscale identity emails or passkey names granted admin access to the tailnet."
+          "items": {
+            "type": "string"
+          }
         },
         "tags": {
+          "description": "ACL tag names available to assign to devices and auth keys (e.g. 'server', 'vm', 'cicd').",
           "type": "array",
-          "items": { "type": "string" },
-          "description": "ACL tag names available to assign to devices and auth keys (e.g. 'server', 'vm', 'cicd')."
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

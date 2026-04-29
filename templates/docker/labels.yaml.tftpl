@@ -1,20 +1,10 @@
 ${yamlencode(merge(
-  service.identity.service == "traefik" || service.networking.port != null || length(service.platform_config.docker.labels) > 0 ? {
+  service.networking.port != null || length(service.platform_config.docker.labels) > 0 ? {
     "homepage.description" = service.identity.description
     "homepage.group"       = service.identity.group
     "homepage.href"        = service.fqdn_internal != null ? "https://${service.fqdn_internal}" : service.fqdn_external != null ? "https://${service.fqdn_external}" : service.networking.urls[0]
     "homepage.icon"        = service.identity.name
     "homepage.name"        = service.identity.title
-  } : {},
-  service.identity.service == "traefik" ? {
-    "traefik.enable"                                                    = "true"
-    "traefik.http.middlewares.autocompress.compress"                    = "true"
-    "traefik.http.middlewares.internal-only.ipallowlist.sourcerange"    = "10.0.0.0/23, 100.64.0.0/10, 127.0.0.1/32"
-    "traefik.http.middlewares.tailscale-only.ipallowlist.sourcerange"   = "100.64.0.0/10, 127.0.0.1/32"
-    "traefik.http.routers.dashboard.middlewares"                        = "tailscale-only@docker"
-    "traefik.http.routers.dashboard.rule"                               = "Host(`${service.fqdn_internal}`)"
-    "traefik.http.routers.dashboard.service"                            = "api@internal"
-    "traefik.http.services.traefik.loadbalancer.server.port"            = "8080"
   } : {},
   service.networking.port != null ? merge(
     {

@@ -4,8 +4,8 @@ locals {
 
   # DNS zone files stay keyed by filepath until each file's zone name is read.
   _dns = {
-    for filepath in fileset(path.module, "data/dns/*.yml") :
-    filepath => yamldecode(file("${path.module}/${filepath}"))
+    for file_path in fileset(path.module, "data/dns/*.yml") :
+    file_path => yamldecode(file("${path.module}/${file_path}"))
   }
 
   # Optional SOPS-encrypted overrides for provided or externally generated
@@ -14,8 +14,8 @@ locals {
 
   # Public defaults exclude per-domain schema defaults, which get their own locals.
   defaults = {
-    for k, v in local._defaults : k => v
-    if !contains(["dns", "servers", "services"], k)
+    for default_key, default_value in local._defaults : default_key => default_value
+    if !contains(["dns", "servers", "services"], default_key)
   }
 
   # Default DNS record attributes merged into manual and generated records.
@@ -29,8 +29,8 @@ locals {
 
   # Final DNS input map: zone name -> list of manually declared records.
   dns = {
-    for filepath, data in local._dns :
-    data.name => try(data.records, [])
+    for file_path, dns_file in local._dns :
+    dns_file.name => try(dns_file.records, [])
   }
 
   # Shared shell script used by shell_sensitive_script resources before GitHub writes.
@@ -53,7 +53,7 @@ output "summary" {
     services = keys(local.services_model_desired)
 
     services_by_feature = {
-      for feature, matches in local.services_output_by_feature : feature => keys(matches)
+      for feature, matches in local.services_outputs_by_feature : feature => keys(matches)
       if length(matches) > 0
     }
   }

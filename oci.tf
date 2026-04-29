@@ -1,14 +1,14 @@
 data "oci_core_vnic" "server" {
-  for_each = oci_core_instance.server
+  for_each = local.oci_vms
 
   vnic_id = data.oci_core_vnic_attachments.server[each.key].vnic_attachments[0].vnic_id
 }
 
 data "oci_core_vnic_attachments" "server" {
-  for_each = oci_core_instance.server
+  for_each = local.oci_vms
 
   compartment_id = var.oci_tenancy_ocid
-  instance_id    = each.value.id
+  instance_id    = oci_core_instance.server[each.key].id
 }
 
 data "oci_identity_availability_domain" "default" {
@@ -21,36 +21,36 @@ data "oci_identity_availability_domain" "default" {
 locals {
   # OCI network primitives are created once per region used by managed OCI VMs.
   oci_regions = toset(distinct([
-    for k, v in local.oci_vms : v.identity.region
+    for vm_key, vm in local.oci_vms : vm.identity.region
   ]))
 
   # OCI resources in this root manage VM servers only.
   oci_vms = {
-    for k, v in local.servers_model_desired : k => v
-    if v.platform == "oci" && v.type == "vm" && v.platform_config.oci != null
+    for server_key, server in local.servers_model_desired : server_key => server
+    if server.platform == "oci" && server.type == "vm" && server.platform_config.oci != null
   }
 
   # Each configured ingress port expands to TCP/UDP and IPv4/IPv6 rules; ICMP is
   # always allowed for basic reachability diagnostics.
   oci_vms_ingress_rules = merge([
-    for k, v in local.oci_vms : merge(
+    for vm_key, vm in local.oci_vms : merge(
       {
-        for item in [
-          { family = "ipv4", port = null, protocol = "1", source = "0.0.0.0/0", vm_key = k },
-          { family = "ipv6", port = null, protocol = "1", source = "::/0", vm_key = k },
-        ] : "${item.vm_key}-icmp-${item.family}" => item
+        for rule in [
+          { family = "ipv4", port = null, protocol = "1", source = "0.0.0.0/0", vm_key = vm_key },
+          { family = "ipv6", port = null, protocol = "1", source = "::/0", vm_key = vm_key },
+        ] : "${rule.vm_key}-icmp-${rule.family}" => rule
       },
       {
-        for item in flatten([
-          for port in v.platform_config.oci.ingress_ports : [
+        for rule in flatten([
+          for port in vm.platform_config.oci.ingress_ports : [
             for combo in [
               { family = "ipv4", protocol = "6", source = "0.0.0.0/0" },
               { family = "ipv4", protocol = "17", source = "0.0.0.0/0" },
               { family = "ipv6", protocol = "6", source = "::/0" },
               { family = "ipv6", protocol = "17", source = "::/0" },
-            ] : merge(combo, { port = port, vm_key = k })
+            ] : merge(combo, { port = port, vm_key = vm_key })
           ]
-        ]) : "${item.vm_key}-${item.protocol == "6" ? "tcp" : "udp"}-${item.family}-${item.port}" => item
+        ]) : "${rule.vm_key}-${rule.protocol == "6" ? "tcp" : "udp"}-${rule.family}-${rule.port}" => rule
       }
     )
   ]...)

@@ -6,3 +6,14 @@ identity:
   name: traefik
   service: traefik
   title: Traefik
+platform_config:
+  docker:
+    labels:
+      traefik.enable: "true"
+      traefik.http.middlewares.autocompress.compress: "true"
+      traefik.http.middlewares.internal-only.ipallowlist.sourcerange: 10.0.0.0/23, 100.64.0.0/10, 127.0.0.1/32
+      traefik.http.middlewares.tailscale-only.ipallowlist.sourcerange: 100.64.0.0/10, 127.0.0.1/32
+      traefik.http.routers.dashboard.middlewares: tailscale-only@docker
+      traefik.http.routers.dashboard.rule: Host(`${service.fqdn_internal}`)
+      traefik.http.routers.dashboard.service: api@internal
+      traefik.http.services.traefik.loadbalancer.server.port: "8080"

@@ -10,9 +10,17 @@ features:
     - length: 32
       name: db_password
       type: alphanumeric
+    - name: igdb_client_id
+      type: external
+    - name: igdb_client_secret
+      type: external
     - length: 32
       name: redis_password
       type: alphanumeric
+    - name: screenscraper_password
+      type: external
+    - name: steamgriddb_api_key
+      type: external
 identity:
   description: ROM & Game Library
   group: Media
